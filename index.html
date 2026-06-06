@@ -3,206 +3,255 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Snow Day Calculator 2.0</title>
-  <link rel="stylesheet" href="styles.css" />
+  <meta name="color-scheme" content="light dark" />
+  <meta
+    name="description"
+    content="A free, transparent snow day calculator. Estimates school closure and delay chances from live weather data — no sign-up, no tracking."
+  />
+  <title>Snow Day Calculator</title>
+  <link rel="stylesheet" href="./css/main.css" />
 </head>
-<body class="theme-midnight">
-  <div class="card">
-    <div class="card-inner">
-      <header>
-        <div class="badge-row">
-          <div class="pill pill-live">
-            <span class="pill-dot"></span>
-            <span>Live Snow Day</span>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <div class="page">
+    <header class="site-header">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">❄️</span>
+        <div>
+          <h1>Snow Day Calculator</h1>
+          <p class="subtitle">A transparent estimate from live forecast data.</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button type="button" id="theme-toggle" class="icon-btn" aria-label="Change theme">
+          <span id="theme-toggle-icon" aria-hidden="true">🌙</span>
+        </button>
+        <button type="button" id="settings-toggle" class="icon-btn" aria-haspopup="dialog" aria-label="Open settings">
+          ⚙️
+        </button>
+      </div>
+    </header>
+
+    <main id="main" class="card">
+      <!-- Search -->
+      <section class="search" aria-label="Find a location">
+        <div class="search-row">
+          <div class="search-field">
+            <label for="location" class="visually-hidden">City, town, or ZIP code</label>
+            <input
+              id="location"
+              type="text"
+              inputmode="search"
+              autocomplete="off"
+              placeholder="Search a city, town, or ZIP code"
+              aria-describedby="search-hint"
+              role="combobox"
+              aria-expanded="false"
+              aria-controls="suggestions"
+              aria-autocomplete="list"
+            />
+            <ul id="suggestions" class="suggestions" role="listbox" hidden></ul>
           </div>
-          <button type="button" id="settings-toggle" class="settings-btn">
-            ⚙️ Settings
+          <button type="button" id="geo-btn" class="ghost-btn" aria-label="Use my current location">
+            <span aria-hidden="true">📍</span><span class="geo-label">My location</span>
           </button>
         </div>
-        <h1>Snow Day Calculator 2.0</h1>
-        <p class="subtitle">
-          A modern take on snow day predictions — powered by live forecast data.
+        <p id="search-hint" class="hint">
+          We’ll fetch the forecast automatically. US locations also show official winter alerts.
         </p>
-      </header>
 
-      <form id="snow-form" autocomplete="off">
-        <div class="field-group">
-          <label for="location">
-            <span>Where are you?</span>
-          </label>
-          <input
-            id="location"
-            type="text"
-            placeholder="City or ZIP (e.g. Laingsburg or 48848)"
-            autocomplete="postal-code"
-          />
-          <p class="small-hint">
-            Start typing your city or ZIP — we’ll grab the forecast automatically.
-          </p>
-          <p class="auto-status" id="auto-status"></p>
-        </div>
-
-        <div class="row-2">
-          <div class="field-group">
-            <label for="school-level">
-              <span>School type</span>
-            </label>
-            <select id="school-level">
-              <option value="elementary">Elementary</option>
-              <option value="middle">Middle school</option>
-              <option value="high">High school</option>
-              <option value="college">College</option>
-            </select>
+        <div class="quick-row">
+          <div class="quick-group" id="saved-group" hidden>
+            <span class="quick-label">Saved</span>
+            <div class="chips" id="saved-locations"></div>
           </div>
-
-          <div class="field-group">
-            <label for="rural">
-              <span>Area</span>
-            </label>
-            <select id="rural">
-              <option value="suburban" selected>City / suburbs</option>
-              <option value="rural">Lots of back roads / rural</option>
-            </select>
+          <div class="quick-group" id="recent-group" hidden>
+            <span class="quick-label">Recent</span>
+            <div class="chips" id="recent-searches"></div>
           </div>
-        </div>
-
-        <div class="field-group">
-          <label for="snow-amount">
-            <span>Snow in the next day (inches)</span>
-          </label>
-          <div class="slider-row">
-            <input
-              id="snow-amount"
-              type="range"
-              min="0"
-              max="18"
-              step="0.1"
-              value="3"
-            />
-            <div class="slider-value" id="snow-value">3"</div>
-          </div>
-          <p class="small-hint">
-            You can still tweak this manually if your weather app disagrees.
-          </p>
-        </div>
-
-        <div class="field-group">
-          <label for="ice-risk">
-            <span>Ice risk</span>
-          </label>
-          <select id="ice-risk">
-            <option value="low">Mostly just snow</option>
-            <option value="medium">Some mix / slush</option>
-            <option value="high">Freezing rain / nasty ice</option>
-          </select>
-        </div>
-
-        <div class="field-group">
-          <label for="low-temp">
-            <span>Overnight low (<span id="temp-unit-label">°F</span>)</span>
-          </label>
-          <div class="slider-row">
-            <input
-              id="low-temp"
-              type="range"
-              min="-10"
-              max="40"
-              step="1"
-              value="20"
-            />
-            <div class="slider-value" id="temp-value">20°F</div>
-          </div>
-        </div>
-
-        <div class="field-group">
-          <label for="timing">
-            <span>When is the worst of it?</span>
-          </label>
-          <select id="timing">
-            <option value="overnight">Overnight into early morning</option>
-            <option value="morning">Mostly before/around bus time</option>
-            <option value="daytime">During school / later in the day</option>
-          </select>
-        </div>
-
-        <button type="submit" id="calculate-btn">
-          <span class="spark">❄️</span>
-          <span>Calculate my snow day odds</span>
-        </button>
-      </form>
-
-      <section id="result" class="result" hidden>
-        <div class="result-top">
-          <div>
-            <div class="percent" id="chance">--%</div>
-            <div class="percent-label">Chance of no school</div>
-          </div>
-          <div class="verdict" id="verdict"></div>
-        </div>
-
-        <div class="chip-row">
-          <div class="chip" id="chip-location"></div>
-          <div class="chip" id="chip-school"></div>
-        </div>
-
-        <div class="breakdown">
-          <div class="breakdown-title">Why this number?</div>
-          <ul id="breakdown"></ul>
         </div>
       </section>
 
-      <div class="footer">
-        <span>Weather data by Open-Meteo.com</span>
-        <div class="tagline">Built to beat the boomer snow day sites 😉</div>
+      <!-- School context (recomputes prediction live) -->
+      <section class="context" aria-label="School details">
+        <div class="context-grid">
+          <div class="field">
+            <label for="school-type">School type</label>
+            <select id="school-type">
+              <option value="elementary">Elementary</option>
+              <option value="middle">Middle school</option>
+              <option value="high" selected>High school</option>
+              <option value="college">College / university</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="area-type">Area</label>
+            <select id="area-type">
+              <option value="urban">Urban</option>
+              <option value="suburban" selected>Suburban</option>
+              <option value="rural">Rural</option>
+            </select>
+          </div>
+        </div>
+
+        <details class="advanced" id="advanced">
+          <summary>Advanced settings</summary>
+          <div class="context-grid">
+            <div class="field">
+              <label for="sensitivity">
+                District snow-day tendency: <output id="sensitivity-out">Average</output>
+              </label>
+              <input id="sensitivity" type="range" min="0" max="1" step="0.1" value="0.5" />
+            </div>
+            <div class="field field-row">
+              <div>
+                <label for="days-used">Snow days used</label>
+                <input id="days-used" type="number" min="0" max="30" value="0" />
+              </div>
+              <div>
+                <label for="days-allowed">Days allowed</label>
+                <input id="days-allowed" type="number" min="0" max="30" value="5" />
+              </div>
+            </div>
+          </div>
+        </details>
+      </section>
+
+      <!-- Winter alert banner -->
+      <div id="alert-banner" class="alert-banner" role="status" hidden>
+        <span class="alert-icon" aria-hidden="true">⚠️</span>
+        <div>
+          <strong id="alert-title"></strong>
+          <p id="alert-text"></p>
+        </div>
       </div>
-    </div>
+
+      <!-- Loading skeleton -->
+      <div id="skeleton" class="skeleton" hidden aria-hidden="true">
+        <div class="sk-dials"><div class="sk-dial"></div><div class="sk-dial"></div></div>
+        <div class="sk-line"></div>
+        <div class="sk-line short"></div>
+        <div class="sk-bars"><span></span><span></span><span></span><span></span></div>
+      </div>
+
+      <!-- Error state -->
+      <div id="error-state" class="error-state" role="alert" hidden>
+        <span aria-hidden="true">🌨️</span>
+        <p id="error-message"></p>
+        <button type="button" id="retry-btn" class="ghost-btn">Try again</button>
+      </div>
+
+      <!-- Result -->
+      <section id="result" class="result" hidden aria-live="polite">
+        <div class="result-head">
+          <div class="dials">
+            <div class="dial" id="dial-closure">
+              <svg viewBox="0 0 120 120" class="dial-svg" aria-hidden="true">
+                <circle class="dial-track" cx="60" cy="60" r="52"></circle>
+                <circle class="dial-fill" cx="60" cy="60" r="52"></circle>
+              </svg>
+              <div class="dial-center">
+                <span class="dial-pct" id="closure-pct">--%</span>
+                <span class="dial-label">School closed</span>
+              </div>
+            </div>
+            <div class="dial small" id="dial-delay">
+              <svg viewBox="0 0 120 120" class="dial-svg" aria-hidden="true">
+                <circle class="dial-track" cx="60" cy="60" r="52"></circle>
+                <circle class="dial-fill" cx="60" cy="60" r="52"></circle>
+              </svg>
+              <div class="dial-center">
+                <span class="dial-pct" id="delay-pct">--%</span>
+                <span class="dial-label">2-hour delay</span>
+              </div>
+            </div>
+          </div>
+          <div class="verdict">
+            <div class="verdict-chips">
+              <span class="chip" id="chip-location"></span>
+              <span class="chip" id="chip-confidence"></span>
+            </div>
+            <p class="recommendation" id="recommendation"></p>
+            <button type="button" id="copy-btn" class="ghost-btn">
+              <span aria-hidden="true">📋</span> Copy summary
+            </button>
+            <button type="button" id="save-btn" class="ghost-btn">
+              <span aria-hidden="true">⭐</span> <span id="save-btn-label">Save location</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="breakdown">
+          <h2 class="section-title">What’s driving this estimate</h2>
+          <ul id="factors" class="factors"></ul>
+        </div>
+
+        <div class="timeline-wrap">
+          <h2 class="section-title">Next hours</h2>
+          <div id="timeline" class="timeline" role="img" aria-label="Hourly snow and temperature forecast"></div>
+        </div>
+
+        <p class="cache-note" id="cache-note" hidden></p>
+      </section>
+
+      <p class="empty-state" id="empty-state">
+        Search for a location above to see your snow day estimate.
+      </p>
+    </main>
+
+    <footer class="site-footer">
+      <p>
+        Weather by <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a> ·
+        US alerts by <a href="https://www.weather.gov" target="_blank" rel="noopener">NWS</a>
+      </p>
+      <p class="disclaimer">
+        An estimate for fun and planning — not affiliated with any school district.
+        Always rely on official announcements.
+      </p>
+    </footer>
   </div>
 
-  <!-- Settings overlay (starts hidden) -->
-  <div id="settings-panel" class="settings-panel" hidden>
+  <!-- Settings dialog -->
+  <div id="settings-panel" class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settings-title" hidden>
     <div class="settings-inner">
       <div class="settings-header">
-        <h2>Settings</h2>
-        <button type="button" id="settings-close" class="settings-close">✕</button>
+        <h2 id="settings-title">Settings</h2>
+        <button type="button" id="settings-close" class="icon-btn" aria-label="Close settings">✕</button>
       </div>
 
-      <div class="settings-group">
-        <p class="settings-label">Temperature unit</p>
-        <div class="settings-options">
-          <label>
-            <input type="radio" name="temp-unit" value="fahrenheit" checked />
-            <span>Fahrenheit (°F)</span>
-          </label>
-          <label>
-            <input type="radio" name="temp-unit" value="celsius" />
-            <span>Celsius (°C)</span>
-          </label>
+      <fieldset class="settings-group">
+        <legend>Theme</legend>
+        <div class="settings-options" id="theme-options">
+          <label><input type="radio" name="theme" value="system" /> <span>System</span></label>
+          <label><input type="radio" name="theme" value="light" /> <span>Light</span></label>
+          <label><input type="radio" name="theme" value="dark" /> <span>Dark</span></label>
+          <label><input type="radio" name="theme" value="midnight" /> <span>Midnight snow</span></label>
         </div>
-      </div>
+      </fieldset>
 
-      <div class="settings-group">
-        <p class="settings-label">Theme</p>
+      <fieldset class="settings-group">
+        <legend>Temperature unit</legend>
         <div class="settings-options">
-          <label>
-            <input type="radio" name="theme" value="midnight" checked />
-            <span>Midnight</span>
-          </label>
-          <label>
-            <input type="radio" name="theme" value="frost" />
-            <span>Frost</span>
-          </label>
-          <label>
-            <input type="radio" name="theme" value="slate" />
-            <span>Slate</span>
-          </label>
+          <label><input type="radio" name="temp-unit" value="fahrenheit" /> <span>Fahrenheit (°F)</span></label>
+          <label><input type="radio" name="temp-unit" value="celsius" /> <span>Celsius (°C)</span></label>
         </div>
-      </div>
+      </fieldset>
+
+      <fieldset class="settings-group">
+        <legend>Motion</legend>
+        <div class="settings-options">
+          <label><input type="radio" name="reduced-motion" value="system" /> <span>Match system</span></label>
+          <label><input type="radio" name="reduced-motion" value="off" /> <span>Allow animations</span></label>
+          <label><input type="radio" name="reduced-motion" value="on" /> <span>Reduce animations</span></label>
+        </div>
+      </fieldset>
     </div>
   </div>
 
-  <!-- Confetti layer -->
-  <div id="confetti-container"></div>
+  <div id="confetti" class="confetti" aria-hidden="true"></div>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
-  <script src="app.js" defer></script>
+  <script type="module" src="./js/main.js"></script>
 </body>
 </html>

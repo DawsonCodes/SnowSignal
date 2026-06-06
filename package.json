@@ -1,0 +1,12 @@
+{
+  "name": "snow-day-calculator",
+  "version": "2.0.0",
+  "description": "A modern, free, static Snow Day Calculator powered by Open-Meteo with a transparent prediction engine.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "node --test",
+    "serve": "python3 -m http.server 8000"
+  },
+  "license": "MIT"
+}

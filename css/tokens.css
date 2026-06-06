@@ -1,0 +1,99 @@
+/* tokens.css
+   Design tokens + themes. main.js sets `data-theme` on <html> to one of:
+   light | dark | midnight | frost | slate. "System" is resolved to light/dark
+   in JS (reading prefers-color-scheme), so the CSS only deals with concrete themes. */
+
+:root {
+  /* spacing / shape */
+  --radius-lg: 20px;
+  --radius-md: 12px;
+  --radius-sm: 8px;
+  --gap: 16px;
+  --maxw: 760px;
+
+  /* brand accents shared across themes */
+  --accent: #2563eb;
+  --accent-strong: #38bdf8;
+  --good: #16a34a;
+  --warn: #f59e0b;
+  --bad: #ef4444;
+
+  /* default (light) palette */
+  --bg: #eef4fb;
+  --bg-glow-1: rgba(56, 189, 248, 0.25);
+  --bg-glow-2: rgba(37, 99, 235, 0.18);
+  --surface: #ffffff;
+  --surface-2: #f1f5f9;
+  --surface-3: #e2e8f0;
+  --text: #0f172a;
+  --muted: #5b6675;
+  --border: rgba(15, 23, 42, 0.12);
+  --shadow: 0 20px 50px rgba(15, 23, 42, 0.12);
+  --track: #dbe4ee;
+}
+
+/* Explicit light keeps parity with :root for the "light" choice. */
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0b1220;
+  --bg-glow-1: rgba(56, 189, 248, 0.18);
+  --bg-glow-2: rgba(37, 99, 235, 0.22);
+  --surface: #131c2e;
+  --surface-2: #1b2640;
+  --surface-3: #243150;
+  --text: #f1f5f9;
+  --muted: #9fb0c7;
+  --border: rgba(148, 163, 184, 0.22);
+  --shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+  --track: #243150;
+}
+
+:root[data-theme="midnight"] {
+  color-scheme: dark;
+  --accent: #6366f1;
+  --accent-strong: #818cf8;
+  --bg: #05070f;
+  --bg-glow-1: rgba(99, 102, 241, 0.28);
+  --bg-glow-2: rgba(56, 189, 248, 0.16);
+  --surface: #0b1020;
+  --surface-2: #121a31;
+  --surface-3: #1a2440;
+  --text: #eef2ff;
+  --muted: #9aa6cc;
+  --border: rgba(129, 140, 248, 0.22);
+  --shadow: 0 28px 70px rgba(0, 0, 0, 0.7);
+  --track: #1a2440;
+}
+
+:root[data-theme="frost"] {
+  color-scheme: dark;
+  --accent: #22d3ee;
+  --accent-strong: #38bdf8;
+  --bg: #0a1622;
+  --bg-glow-1: rgba(34, 211, 238, 0.22);
+  --bg-glow-2: rgba(56, 189, 248, 0.2);
+  --surface: #0f1f2e;
+  --surface-2: #16293a;
+  --surface-3: #1d3447;
+  --text: #ecfeff;
+  --muted: #a5c4d4;
+  --border: rgba(56, 189, 248, 0.25);
+  --shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+  --track: #1d3447;
+}
+
+:root[data-theme="slate"] {
+  color-scheme: dark;
+  --bg: #020617;
+  --surface: #0f172a;
+  --surface-2: #1e293b;
+  --surface-3: #334155;
+  --text: #f8fafc;
+  --muted: #94a3b8;
+  --border: rgba(148, 163, 184, 0.2);
+  --track: #334155;
+}

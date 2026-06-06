@@ -1,0 +1,5 @@
+/* main.css — single stylesheet entry point. Imported partials work directly
+   from static files on GitHub Pages (no build step required). */
+@import "./tokens.css";
+@import "./base.css";
+@import "./components.css";

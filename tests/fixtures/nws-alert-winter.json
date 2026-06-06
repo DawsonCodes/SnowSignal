@@ -1,0 +1,29 @@
+{
+  "@context": ["https://geojson.org/geojson-ld/geojson-context.jsonld"],
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "id": "urn:oid:2.49.0.1.840.0.example1",
+      "type": "Feature",
+      "properties": {
+        "event": "Winter Storm Warning",
+        "severity": "Severe",
+        "headline": "Winter Storm Warning issued January 9 by NWS",
+        "description": "Heavy snow expected. Total snow accumulations of 6 to 10 inches.",
+        "areaDesc": "Clinton County",
+        "expires": "2026-01-10T18:00:00-05:00"
+      }
+    },
+    {
+      "id": "urn:oid:2.49.0.1.840.0.example2",
+      "type": "Feature",
+      "properties": {
+        "event": "Special Weather Statement",
+        "severity": "Moderate",
+        "headline": "Not a winter alert and should be filtered out",
+        "areaDesc": "Clinton County",
+        "expires": "2026-01-10T12:00:00-05:00"
+      }
+    }
+  ]
+}
