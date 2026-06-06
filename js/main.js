@@ -33,11 +33,12 @@ import {
   forecastTargetDate,
 } from "./calendarContext.js";
 import { applyAtmosphere } from "./atmosphere.js";
+import { resolvePaletteSeason, resolvePaletteHue, daypartFromHour } from "./palette.js";
 import * as ui from "./ui.js";
 
 const { $ } = ui;
 
-const APP_VERSION = "1.0.0-beta.3";
+const APP_VERSION = "1.0.0-beta.4";
 
 // The last user action, so the error-state Retry button can re-run it.
 let lastAction = null;
@@ -72,7 +73,6 @@ let activeSuggestion = -1;
 function applySettings() {
   ui.applyTheme(state.settings.theme);
   ui.applyMotion(state.settings.reducedMotion);
-  ui.applyAccent(state.settings.accentHue);
 
   // School context controls
   $("school-type").value = state.settings.schoolType;
@@ -85,12 +85,39 @@ function applySettings() {
 
   // Settings dialog controls
   setRadio("theme", state.settings.theme);
+  setRadio("palette", state.settings.seasonalPalette);
   setRadio("atmosphere", state.settings.atmosphere);
   setRadio("temp-unit", state.settings.tempUnit);
   setRadio("reduced-motion", state.settings.reducedMotion);
-  $("accent-hue").value = String(Number.isFinite(state.settings.accentHue) ? state.settings.accentHue : 217);
 
+  applyPaletteNow(); // resolves the accent hue, daypart, badge, slider, empty icon
   applyAtmosphereNow();
+}
+
+/**
+ * Resolve and apply the seasonal palette: accent hue (via the Custom slider or a
+ * season preset), the time-of-day ambient intensity (Auto only), the read-only
+ * Auto badge, the hue-slider reflection, and the empty-state seasonal icon.
+ */
+function applyPaletteNow() {
+  const palette = state.settings.seasonalPalette;
+  const lat = state.place ? state.place.latitude : null;
+  const now = locationNow(state.forecast); // browser clock until a forecast loads
+  const season = resolvePaletteSeason({ palette, lat, date: now });
+  const hue = resolvePaletteHue({ palette, accentHue: state.settings.accentHue, lat, date: now });
+
+  ui.applyAccent(hue);
+  $("accent-hue").value = String(Math.round(hue)); // reflect resolved hue on the slider
+
+  // Subtle time-of-day ambient intensity, only under the Auto palette.
+  const root = document.documentElement;
+  if (palette === "auto") root.setAttribute("data-daypart", daypartFromHour(now.getHours()));
+  else root.removeAttribute("data-daypart");
+
+  ui.updatePaletteBadge(palette, season);
+  // Decorative empty-state icon: use the resolved season, or the location/date
+  // season when on a Custom palette.
+  ui.setEmptyIcon(season || resolvePaletteSeason({ palette: "auto", lat, date: now }));
 }
 
 function setRadio(name, value) {
@@ -225,6 +252,7 @@ async function loadPlace(place) {
   $("location").value = formatPlaceLabel(place);
   ui.showSkeleton();
   applyAtmosphereNow(); // hemisphere may flip the auto season
+  applyPaletteNow(); // auto palette/season follows the new location
 
   const lat = place.latitude;
   const lon = place.longitude;
@@ -260,6 +288,7 @@ async function loadPlace(place) {
     state.alert = await alertsPromise;
 
     ui.renderAlertBanner(state.alert);
+    applyPaletteNow(); // daypart can now use the location's local time
     refreshScheduleContext(); // now that a location exists
     recompute({ entrance: true }); // fresh forecast → full entrance animation
 
@@ -565,18 +594,30 @@ function wireSettings() {
     })
   );
 
-  // Accent hue: live preview on input, persist on change.
+  // Seasonal palette pills.
+  document.querySelectorAll('input[name="palette"]').forEach((r) =>
+    r.addEventListener("change", () => {
+      if (r.checked) {
+        state.settings = saveSettings({ seasonalPalette: r.value });
+        applyPaletteNow(); // presentation only — no result re-render
+      }
+    })
+  );
+
+  // Accent hue: live preview on input; adjusting it switches the palette to Custom.
   $("accent-hue").addEventListener("input", () => ui.applyAccent(Number($("accent-hue").value)));
   $("accent-hue").addEventListener("change", () => {
     const hue = Number($("accent-hue").value);
-    state.settings = saveSettings({ accentHue: hue });
-    ui.applyAccent(hue);
+    state.settings = saveSettings({ seasonalPalette: "custom", accentHue: hue });
+    setRadio("palette", "custom");
+    applyPaletteNow();
   });
   $("accent-reset").addEventListener("click", () => {
-    state.settings = saveSettings({ accentHue: null });
-    $("accent-hue").value = "217";
-    ui.applyAccent(null);
-    ui.toast("Accent reset");
+    // Reset restores the Auto seasonal palette and the brand hue.
+    state.settings = saveSettings({ seasonalPalette: "auto", accentHue: null });
+    setRadio("palette", "auto");
+    applyPaletteNow();
+    ui.toast("Palette reset to Auto");
   });
 
   // Data actions (destructive → confirm, then toast).
@@ -702,6 +743,14 @@ function init() {
     if (lastAction) lastAction();
     else if (state.place) loadPlace(state.place);
   });
+
+  // Desktop-only hourly scroll arrows (touch users swipe; smooth via CSS).
+  const scrollTimelineBy = (dx) => {
+    const t = $("timeline");
+    if (t) t.scrollBy({ left: dx, behavior: "smooth" });
+  };
+  $("timeline-prev").addEventListener("click", () => scrollTimelineBy(-180));
+  $("timeline-next").addEventListener("click", () => scrollTimelineBy(180));
 
   // React to OS theme changes while on "system".
   if (window.matchMedia) {

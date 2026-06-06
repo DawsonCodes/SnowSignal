@@ -16,10 +16,16 @@
   --gap: 18px;
   --maxw: 1080px; /* roomier desktop workspace; collapses cleanly on mobile */
 
-  /* Accent hue (0..360). ~217 ≈ the original SnowSignal blue. */
+  /* Accent hue (0..360). ~217 ≈ the original SnowSignal blue. Driven by the
+     Seasonal palette (Auto/season presets) or the Custom hue slider. */
   --accent-h: 217;
 
-  /* fixed semantic colors — kept distinct from the accent */
+  /* Time-of-day ambient intensity (set via [data-daypart] only under Auto). */
+  --glow-mult: 1; /* ambient glow brightness multiplier */
+  --atm-bright: 1; /* atmosphere particle brightness multiplier */
+  --evening-warm: 0; /* alpha of a subtle warm evening wash */
+
+  /* fixed semantic colors — kept distinct from the accent and never hue-driven */
   --good: #16a34a;
   --warn: #f59e0b;
   --bad: #ef4444;
@@ -30,8 +36,8 @@
   --accent-strong: hsl(var(--accent-h) 85% 60%);
   --accent-ring: hsl(var(--accent-h) 85% 53% / 0.28);
   --bg: #eef4fb;
-  --bg-glow-1: hsl(var(--accent-h) 90% 65% / 0.22);
-  --bg-glow-2: hsl(var(--accent-h) 83% 53% / 0.16);
+  --bg-glow-1: hsl(var(--accent-h) 90% 65% / calc(0.22 * var(--glow-mult)));
+  --bg-glow-2: hsl(var(--accent-h) 83% 53% / calc(0.16 * var(--glow-mult)));
   --surface: #ffffff;
   --surface-2: #f1f5f9;
   --surface-3: #e2e8f0;
@@ -47,6 +53,21 @@
   color-scheme: light;
 }
 
+/* Time-of-day ambient intensity. Applied only under the Auto seasonal palette
+   (main.js sets/removes data-daypart). Subtle by design — not separate themes. */
+:root[data-daypart="day"] {
+  --glow-mult: 1.12;
+}
+:root[data-daypart="evening"] {
+  --glow-mult: 0.9;
+  --atm-bright: 0.9;
+  --evening-warm: 0.06;
+}
+:root[data-daypart="night"] {
+  --glow-mult: 0.66;
+  --atm-bright: 0.7;
+}
+
 :root[data-theme="dark"] {
   color-scheme: dark;
   /* Slightly brighter accent so any hue stays legible on the dark surface. */
@@ -54,8 +75,8 @@
   --accent-strong: hsl(var(--accent-h) 85% 70%);
   --accent-ring: hsl(var(--accent-h) 85% 62% / 0.4);
   --bg: #0b1220;
-  --bg-glow-1: hsl(var(--accent-h) 85% 60% / 0.2);
-  --bg-glow-2: hsl(var(--accent-h) 80% 55% / 0.24);
+  --bg-glow-1: hsl(var(--accent-h) 85% 60% / calc(0.2 * var(--glow-mult)));
+  --bg-glow-2: hsl(var(--accent-h) 80% 55% / calc(0.24 * var(--glow-mult)));
   --surface: #131c2e;
   --surface-2: #1b2640;
   --surface-3: #243150;

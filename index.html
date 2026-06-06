@@ -212,7 +212,11 @@
               <summary>Weather details</summary>
               <dl class="wd-grid" id="wd-grid"></dl>
               <h3 class="section-title wd-timeline-title">Hourly outlook</h3>
-              <div id="timeline" class="timeline" role="img" aria-label="Hourly snow and temperature forecast"></div>
+              <div class="timeline-row">
+                <button type="button" class="timeline-arrow" id="timeline-prev" aria-label="Scroll the hourly forecast earlier" tabindex="-1">‹</button>
+                <div id="timeline" class="timeline" role="img" aria-label="Hourly snow and temperature forecast"></div>
+                <button type="button" class="timeline-arrow" id="timeline-next" aria-label="Scroll the hourly forecast later" tabindex="-1">›</button>
+              </div>
             </details>
           </div>
         </div>
@@ -220,9 +224,10 @@
         <p class="cache-note" id="cache-note" hidden></p>
       </section>
 
-      <p class="empty-state" id="empty-state">
-        Search for a location above to see your snow day estimate.
-      </p>
+      <div class="empty-state" id="empty-state">
+        <span class="empty-icon" id="empty-icon" aria-hidden="true">❄️</span>
+        <p>Search a location to check tonight’s forecast.</p>
+      </div>
     </main>
 
     <!-- Schedule context: heuristic calendar reminders, separate from the calculator.
@@ -282,6 +287,19 @@
           </fieldset>
 
           <fieldset class="settings-group">
+            <legend>Seasonal palette</legend>
+            <div class="settings-pills" id="palette-options" role="radiogroup" aria-label="Seasonal palette">
+              <label class="pill"><input type="radio" name="palette" value="auto" /> <span>Auto</span></label>
+              <label class="pill"><input type="radio" name="palette" value="winter" /> <span>Winter</span></label>
+              <label class="pill"><input type="radio" name="palette" value="spring" /> <span>Spring</span></label>
+              <label class="pill"><input type="radio" name="palette" value="summer" /> <span>Summer</span></label>
+              <label class="pill"><input type="radio" name="palette" value="fall" /> <span>Fall</span></label>
+              <label class="pill"><input type="radio" name="palette" value="custom" /> <span>Custom</span></label>
+            </div>
+            <p class="settings-badge" id="palette-auto-badge" hidden></p>
+          </fieldset>
+
+          <fieldset class="settings-group">
             <legend>Accent hue</legend>
             <div class="accent-row">
               <span class="accent-swatch" id="accent-swatch" aria-hidden="true"></span>
@@ -290,7 +308,7 @@
                      aria-describedby="accent-help" />
               <button type="button" class="ghost-btn" id="accent-reset">Reset</button>
             </div>
-            <p class="hint" id="accent-help">Tunes the accent and ambient glow. Contrast and status colors stay fixed.</p>
+            <p class="hint" id="accent-help">Adjusting the hue switches Seasonal palette to Custom. Reset restores Auto. Contrast and status colors stay fixed.</p>
           </fieldset>
 
           <fieldset class="settings-group">

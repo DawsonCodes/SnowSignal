@@ -32,6 +32,7 @@ body {
   background:
     radial-gradient(circle at 12% -10%, var(--bg-glow-1), transparent 45%),
     radial-gradient(circle at 90% 0%, var(--bg-glow-2), transparent 45%),
+    radial-gradient(circle at 50% 120%, hsl(30 90% 60% / var(--evening-warm, 0)), transparent 55%),
     var(--bg);
   background-attachment: fixed;
   line-height: 1.5;

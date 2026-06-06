@@ -10,7 +10,8 @@ const DEFAULT_TTL_MS = 30 * 60 * 1000; // 30 minutes
 
 export const DEFAULT_SETTINGS = {
   theme: "system", // 'system' | 'light' | 'dark'
-  accentHue: null, // null = brand default; otherwise an integer hue 0..360
+  seasonalPalette: "auto", // 'auto' | 'winter' | 'spring' | 'summer' | 'fall' | 'custom'
+  accentHue: null, // null = brand default; otherwise an integer hue 0..360 (used when Custom)
   atmosphere: "auto", // 'auto' | 'winter' | 'spring' | 'summer' | 'fall' | 'off'
   tempUnit: "fahrenheit",
   reducedMotion: "system", // 'system' | 'on' | 'off'

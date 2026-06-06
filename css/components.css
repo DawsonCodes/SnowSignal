@@ -720,12 +720,56 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* --- Hourly timeline --- */
+.timeline-row {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  min-width: 0;
+}
+
+/* Optional desktop-only scroll arrows; hidden on touch/small screens. */
+.timeline-arrow {
+  display: none;
+  flex: 0 0 auto;
+  width: 28px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.timeline-arrow:hover {
+  background: var(--surface-3);
+}
+
 .timeline {
   display: flex;
   gap: 6px;
   overflow-x: auto;
   padding-bottom: 6px;
+  min-width: 0;
+  scroll-behavior: smooth;
+  /* Subtle, unobtrusive scrollbar. */
   scrollbar-width: thin;
+  scrollbar-color: var(--surface-3) transparent;
+}
+
+.timeline::-webkit-scrollbar {
+  height: 6px;
+}
+
+.timeline::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.timeline::-webkit-scrollbar-thumb {
+  background: var(--surface-3);
+  border-radius: 999px;
 }
 
 .t-hour {
@@ -765,7 +809,14 @@ input[type="range"]::-moz-range-thumb {
   text-align: center;
   color: var(--muted);
   font-size: 0.9rem;
-  padding: 12px 0;
+  padding: 16px 0;
+}
+
+.empty-icon {
+  display: block;
+  font-size: 1.9rem;
+  margin-bottom: 8px;
+  opacity: 0.8;
 }
 
 /* --- Skeleton --- */
@@ -937,6 +988,7 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .settings-tab {
+  position: relative;
   appearance: none;
   border: none;
   background: none;
@@ -945,13 +997,31 @@ input[type="range"]::-moz-range-thumb {
   font-size: 0.88rem;
   font-weight: 600;
   cursor: pointer;
-  border-bottom: 2px solid transparent;
   white-space: nowrap;
+  transition: color 0.16s ease;
+}
+
+/* Smoothly-animated active-tab underline (scales in; zeroed under reduced motion). */
+.settings-tab::after {
+  content: "";
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: -1px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--accent-strong);
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 0.16s ease;
 }
 
 .settings-tab[aria-selected="true"] {
   color: var(--accent-strong);
-  border-bottom-color: var(--accent-strong);
+}
+
+.settings-tab[aria-selected="true"]::after {
+  transform: scaleX(1);
 }
 
 .settings-tab:hover {
@@ -960,6 +1030,16 @@ input[type="range"]::-moz-range-thumb {
 
 .settings-panel-tab {
   padding-top: 6px;
+}
+
+/* Restrained fade + slight upward slide of a newly selected tab panel. */
+.settings-panel-tab.tab-anim {
+  animation: tab-in 0.16s ease both;
+}
+
+@keyframes tab-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
 }
 
 .settings-group {
@@ -1153,7 +1233,8 @@ input[type="range"]::-moz-range-thumb {
   top: -6vh;
   font-size: calc(15px * var(--s, 1));
   line-height: 1;
-  opacity: var(--o, 0.3);
+  /* Particle brightness dims subtly in the evening/night under the Auto palette. */
+  opacity: calc(var(--o, 0.3) * var(--atm-bright, 1));
   will-change: transform;
   animation: atm-fall var(--dur, 12s) linear var(--delay, 0s) infinite;
 }
@@ -1162,20 +1243,27 @@ input[type="range"]::-moz-range-thumb {
    Defaults below are tuned for dark backgrounds; the light-theme block re-tints
    for contrast. Per-theme opacity is nudged so effects stay tasteful on both. */
 .atmosphere[data-season="winter"] .atm-particle { color: #cfe0f5; }
-.atmosphere[data-season="spring"] .atm-particle { color: #f3c4d8; }
+
+/* Spring petals drift down with a gentle side-to-side sway. */
+.atmosphere[data-season="spring"] .atm-particle {
+  color: #f3c4d8;
+  animation-name: atm-sway-fall;
+}
+
+/* Fall leaves drift slowly and rotate (atm-fall already rotates a full turn). */
 .atmosphere[data-season="fall"] .atm-particle { font-size: calc(16px * var(--s, 1)); }
 
-/* Summer motes float upward with a soft warm glow. */
+/* Summer firefly-like motes float upward with a soft warm glow and brightness pulse. */
 .atmosphere[data-season="summer"] .atm-particle {
   color: #ffd98a;
   text-shadow: 0 0 6px rgba(255, 217, 138, 0.8);
-  animation-name: atm-rise;
+  animation-name: atm-firefly;
 }
 
 /* Light theme: darker tints + slightly lower opacity so particles read without
-   shouting against a bright surface. */
-:root[data-theme="light"] .atmosphere[data-season="winter"] .atm-particle { color: #6f9fd8; opacity: calc(var(--o, 0.3) * 0.8); }
-:root[data-theme="light"] .atmosphere[data-season="spring"] .atm-particle { color: #d27aa6; opacity: calc(var(--o, 0.3) * 0.8); }
+   shouting against a bright surface (still respecting the daypart brightness). */
+:root[data-theme="light"] .atmosphere[data-season="winter"] .atm-particle { color: #6f9fd8; opacity: calc(var(--o, 0.3) * 0.8 * var(--atm-bright, 1)); }
+:root[data-theme="light"] .atmosphere[data-season="spring"] .atm-particle { color: #d27aa6; opacity: calc(var(--o, 0.3) * 0.8 * var(--atm-bright, 1)); }
 :root[data-theme="light"] .atmosphere[data-season="summer"] .atm-particle { color: #e08a1e; text-shadow: none; }
 
 @keyframes atm-fall {
@@ -1187,6 +1275,25 @@ input[type="range"]::-moz-range-thumb {
   0% { transform: translate3d(0, 112vh, 0); opacity: 0; }
   12% { opacity: var(--o, 0.3); }
   88% { opacity: var(--o, 0.3); }
+  100% { transform: translate3d(var(--x, 0), -8vh, 0); opacity: 0; }
+}
+
+/* Spring: a gentle side-to-side sway while drifting down. */
+@keyframes atm-sway-fall {
+  0% { transform: translate3d(0, -6vh, 0) rotate(0deg); }
+  25% { transform: translate3d(16px, 27vh, 0) rotate(36deg); }
+  50% { transform: translate3d(-12px, 54vh, 0) rotate(-26deg); }
+  75% { transform: translate3d(14px, 81vh, 0) rotate(30deg); }
+  100% { transform: translate3d(0, 108vh, 0) rotate(0deg); }
+}
+
+/* Summer: rise slowly while pulsing brightness like a firefly. */
+@keyframes atm-firefly {
+  0% { transform: translate3d(0, 112vh, 0); opacity: 0; }
+  15% { opacity: calc(var(--o, 0.3) * var(--atm-bright, 1)); }
+  45% { opacity: calc(var(--o, 0.3) * var(--atm-bright, 1) * 0.4); }
+  65% { opacity: calc(var(--o, 0.3) * var(--atm-bright, 1)); }
+  85% { opacity: calc(var(--o, 0.3) * var(--atm-bright, 1) * 0.55); }
   100% { transform: translate3d(var(--x, 0), -8vh, 0); opacity: 0; }
 }
 
@@ -1267,6 +1374,10 @@ input[type="range"]::-moz-range-thumb {
   .dial.small {
     width: 118px;
     height: 118px;
+  }
+  /* Hourly scroll arrows are a desktop-only affordance (touch users swipe). */
+  .timeline-arrow {
+    display: flex;
   }
 }
 
