@@ -8,8 +8,10 @@ import assert from "node:assert/strict";
 function makeEl() {
   const classes = new Set();
   const qcache = {};
+  const attrs = {};
   const el = {
     children: [],
+    tabIndex: 0,
     style: new Proxy({}, { get: () => "", set: () => true }),
     classList: {
       add: (c) => classes.add(c),
@@ -31,10 +33,14 @@ function makeEl() {
     get offsetWidth() {
       return 0;
     },
-    setAttribute() {},
-    removeAttribute() {},
-    getAttribute() {
-      return null;
+    setAttribute(k, v) {
+      attrs[k] = String(v);
+    },
+    removeAttribute(k) {
+      delete attrs[k];
+    },
+    getAttribute(k) {
+      return k in attrs ? attrs[k] : null;
     },
     querySelector(sel) {
       return (qcache[sel] ||= makeEl());
@@ -66,7 +72,7 @@ globalThis.window = { matchMedia: () => ({ matches: false, addEventListener() {}
 globalThis.requestAnimationFrame = () => 0; // no-op: don't drive entrance timers
 globalThis.performance = { now: () => 0 };
 
-const { renderResult } = await import("../js/ui.js");
+const { renderResult, activateTab } = await import("../js/ui.js");
 
 const baseResult = {
   closurePct: 42,
@@ -103,6 +109,23 @@ test("a fresh forecast entrance replays the reveal animation", () => {
   renderResult(baseResult, { ...baseMeta, entrance: true });
   const card = document.getElementById("result");
   assert.equal(card.classList.contains("reveal"), true, "entrance adds the reveal class");
+});
+
+test("activateTab updates tab semantics and reveals only the matching panel", () => {
+  const tabs = ["tab-appearance", "tab-weather", "tab-data", "tab-about"];
+  const panels = ["panel-appearance", "panel-weather", "panel-data", "panel-about"];
+  tabs.forEach((t, i) => document.getElementById(t).setAttribute("aria-controls", panels[i]));
+
+  activateTab("tab-weather");
+
+  assert.equal(document.getElementById("tab-weather").getAttribute("aria-selected"), "true");
+  assert.equal(document.getElementById("tab-appearance").getAttribute("aria-selected"), "false");
+  assert.equal(document.getElementById("tab-weather").tabIndex, 0, "selected tab is tabbable");
+  assert.equal(document.getElementById("tab-appearance").tabIndex, -1, "unselected tabs use roving tabindex");
+  assert.equal(document.getElementById("panel-weather").hidden, false, "matching panel shown");
+  assert.equal(document.getElementById("panel-appearance").hidden, true, "other panels hidden");
+  // The newly shown panel gets the restrained entrance animation class.
+  assert.equal(document.getElementById("panel-weather").classList.contains("tab-anim"), true);
 });
 
 test("the gate explanation is shown only when the estimate is gated", () => {

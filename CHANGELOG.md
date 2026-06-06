@@ -3,6 +3,43 @@
 All notable changes to SnowSignal are documented here. This project is in **public
 beta**; versions follow [semantic versioning](https://semver.org) with pre-release tags.
 
+## [1.0.0-beta.4] — 2026-06-06
+
+A focused **seasonal-polish beta** — the last planned visual-polish release for a while, and
+**not** a stable production release. No engine changes, no backend, no framework, no build step,
+no analytics/tracking, no new runtime dependencies. Stays fully static under GitHub Pages
+`/snowsignal/`, and all beta.2/beta.3 preferences, saved/recent locations, and share links keep
+working.
+
+### Added
+- **Seasonal palette** (Appearance → Seasonal palette): **Auto / Winter / Spring / Summer / Fall /
+  Custom**. Auto follows the selected location's latitude + local date (Southern Hemisphere
+  inverts; browser date as a fallback before a location is chosen) and shows a read-only
+  `Auto palette: <Season>` badge. Restrained seasonal accents — Winter icy blue/cyan, Spring soft
+  pink/lavender, Summer fresh green, Fall amber/orange — each with a matching ambient glow.
+  Persisted in `localStorage`. The existing constrained hue slider remains; **adjusting it switches
+  the palette to Custom**, and **Reset restores Auto**. Semantic warning/success/error colors stay
+  fixed and never follow the accent.
+- **Time-of-day ambient intensity** (Auto palette only): a subtle day/evening/night variation of
+  the ambient glow and particle brightness based on the location's local time (browser time as a
+  fallback) — brighter by day, softer/slightly warmer in the evening, deeper and dimmer at night.
+  Not separate themes.
+- **Optional desktop hourly scroll arrows** in Weather details (touch users still swipe).
+
+### Changed
+- **Atmosphere refinement** — varied winter snowflakes with slow layered drift, spring petals with
+  a gentle side-to-side sway, firefly-like summer motes with restrained brightness pulses, and
+  slowly rotating fall leaves. Low particle counts, `pointer-events: none`, no layout impact, and
+  fully disabled under reduced motion / Reduce animations; tuned for both Light and Dark.
+- **Settings-tab motion polish** — a restrained ~160ms fade + 4px upward slide of the newly
+  selected panel and a smoothly animated active-tab underline, with keyboard focus, tab semantics,
+  Arrow/Home/End navigation, focus trapping, Escape/X/click-outside close all preserved. Switching
+  tabs never replays result animations; effects are zeroed under reduced motion.
+- **Hourly forecast scrolling** — smooth horizontal scrolling, a subtler scrollbar, and no
+  horizontal page overflow.
+- **Empty state** — clearer prompt ("Search a location to check tonight's forecast.") with one
+  restrained seasonal icon; kept lightweight.
+
 ## [1.0.0-beta.3] — 2026-06-06
 
 Another focused **polish beta** — not a stable release. The transparent deterministic

@@ -12,7 +12,7 @@ deploys to GitHub Pages as-is. The only third-party calls are Open-Meteo (weathe
 geocoding), the NWS alerts API (U.S. only), and BigDataCloud's free, keyless
 reverse-geocode endpoint for friendly "My location" labels.
 
-> **Status:** polish beta (`v1.0.0-beta.3`) — not a stable release. See
+> **Status:** seasonal-polish beta (`v1.0.0-beta.4`) — not a stable release. See
 > [Versioning](#versioning), [CHANGELOG.md](CHANGELOG.md), and [ROADMAP.md](ROADMAP.md).
 > The GitHub Pages URL is served from the `/snowsignal/` project subpath and all asset
 > paths are relative so the app keeps working there.
@@ -28,10 +28,15 @@ reverse-geocode endpoint for friendly "My location" labels.
 - 🛑 A **winter-weather plausibility gate**: with no meaningful winter hazard in the forecast window,
   the estimate resolves to **0%** with a clear explanation — sensitivity, warm-weather wind, or the
   calendar month can't create a phantom snow day, and unusual out-of-season storms still count
-- 🎨 **System / Light / Dark** themes (with a "System detected" badge) plus safe **accent-hue**
-  customization via a constrained hue slider
-- 🍃 **Seasonal atmosphere** — restrained, motion-respecting ambient effects (snow / petals / motes /
-  leaves) with an **Auto** mode that reads the location's hemisphere + date, tuned for light & dark
+- 🎨 **System / Light / Dark** themes (with a "System detected" badge) plus a **Seasonal palette**
+  (Auto / Winter / Spring / Summer / Fall / Custom). **Auto** follows the location's latitude + local
+  date (Southern Hemisphere inverts) and shows an `Auto palette: <Season>` badge; the constrained
+  **hue slider** still lets you go **Custom** (Reset restores Auto). Status colors stay fixed.
+- 🌗 **Time-of-day ambient intensity** under Auto — a subtle brighter-by-day / softer-evening /
+  deeper-night variation of the ambient glow and particle brightness (not separate themes)
+- 🍃 **Seasonal atmosphere** — restrained, motion-respecting ambient effects: varied drifting snow,
+  swaying spring petals, firefly-like summer motes, and rotating fall leaves — tuned for light & dark
+  and fully disabled under reduced motion
 - 📅 A separate **Schedule context** panel — clearly-labeled weekend / summer-break / winter-break
   heuristics, hidden until a result exists (dismissible, never authoritative)
 - 🗓️ A result **date & freshness header** (location-local date, forecast window, "Updated …" stamp) and
@@ -146,15 +151,14 @@ Notes:
 
 ## Versioning
 
-This is **`v1.0.0-beta.3`** — a **polish beta**, still not a stable release. `beta.1` was the
-first public beta of the rebuilt app; `beta.2` and `beta.3` keep the same transparent prediction
-engine. `beta.3` adds a winter-weather plausibility gate, a wider desktop workspace, a separate
-Schedule context panel, simplified System/Light/Dark themes with safe accent-hue customization, a
-wider tabbed Settings modal, fewer animation replays, result date/freshness labels, a collapsible
-Weather details panel, a device-local estimate counter, and friendlier loading/error states. Please
-keep treating predictions as estimates while the engine is tuned against real outcomes. Full notes
-are in [CHANGELOG.md](CHANGELOG.md); the road to a stable `v1.0.0` and beyond is in
-[ROADMAP.md](ROADMAP.md).
+This is **`v1.0.0-beta.4`** — a **seasonal-polish beta** (the last planned visual-polish release for
+a while), still not a stable release. `beta.1` was the first public beta of the rebuilt app;
+`beta.2`–`beta.4` keep the same transparent prediction engine. `beta.4` adds the Seasonal palette
+system with location-aware Auto and safe accent ranges, subtle time-of-day ambient intensity, refined
+per-season atmosphere, Settings-tab motion polish, smoother/subtler hourly-forecast scrolling, and a
+clearer seasonal empty state. Please keep treating predictions as estimates while the engine is tuned
+against real outcomes. Full notes are in [CHANGELOG.md](CHANGELOG.md); the road to a stable `v1.0.0`
+and beyond is in [ROADMAP.md](ROADMAP.md).
 
 ## Attribution
 

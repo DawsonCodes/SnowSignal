@@ -107,4 +107,69 @@ test("light and dark atmospheres are tuned separately", () => {
     /:root\[data-theme="light"\]\s+\.atmosphere\[data-season="winter"\]/,
     "light-theme winter particles are re-tinted for contrast"
   );
+  assert.match(
+    css,
+    /:root\[data-theme="light"\]\s+\.atmosphere\[data-season="summer"\]/,
+    "light-theme summer particles are re-tinted too"
+  );
+});
+
+test("refined seasonal atmospheres define their motion keyframes", () => {
+  const css = read("css/components.css");
+  assert.match(css, /@keyframes atm-sway-fall/, "spring sway keyframe");
+  assert.match(css, /@keyframes atm-firefly/, "summer firefly keyframe");
+  assert.match(css, /data-season="spring"[^}]*animation-name:\s*atm-sway-fall/, "spring uses the sway");
+  assert.match(css, /data-season="summer"[^}]*animation-name:\s*atm-firefly/, "summer uses the firefly");
+});
+
+test("seasonal palette control and Auto badge exist in the Appearance tab", () => {
+  const html = read("index.html");
+  assert.match(html, /name="palette"[^>]*value="auto"/, "Auto palette option");
+  assert.match(html, /name="palette"[^>]*value="custom"/, "Custom palette option");
+  assert.match(html, /id="palette-auto-badge"/, "the read-only Auto palette badge");
+});
+
+test("semantic status colors are fixed and NOT hue-driven", () => {
+  const tokens = read("css/tokens.css");
+  // Each is a literal hex, never hsl(var(--accent-h) ...).
+  assert.match(tokens, /--good:\s*#[0-9a-fA-F]{3,8}\s*;/);
+  assert.match(tokens, /--warn:\s*#[0-9a-fA-F]{3,8}\s*;/);
+  assert.match(tokens, /--bad:\s*#[0-9a-fA-F]{3,8}\s*;/);
+  assert.equal(/--(?:good|warn|bad):\s*hsl\(var\(--accent-h\)/.test(tokens), false, "status colors must not follow the accent hue");
+});
+
+test("time-of-day ambient intensity is defined via data-daypart", () => {
+  const tokens = read("css/tokens.css");
+  assert.match(tokens, /\[data-daypart="day"\]/);
+  assert.match(tokens, /\[data-daypart="evening"\]/);
+  assert.match(tokens, /\[data-daypart="night"\][^}]*--glow-mult/);
+  assert.match(tokens, /--glow-mult/, "ambient glow uses an intensity multiplier");
+});
+
+test("hourly timeline keeps subtle, smooth, overflow-safe scrolling", () => {
+  const css = read("css/components.css");
+  const rule = /\.timeline\s*\{[^}]*\}/.exec(css);
+  assert.ok(rule, "expected a .timeline rule");
+  assert.match(rule[0], /overflow-x:\s*auto/, "horizontal scrolling preserved");
+  assert.match(rule[0], /scroll-behavior:\s*smooth/, "smooth scrolling");
+  assert.match(rule[0], /scrollbar-width:\s*thin/, "subtle scrollbar");
+  assert.match(css, /\.timeline-arrow/, "optional desktop scroll arrows are styled");
+  // Arrows are desktop-only (declared display:none, revealed in a min-width query).
+  assert.match(css, /\.timeline-arrow\s*\{[^}]*display:\s*none/);
+});
+
+test("settings tabs animate the underline and panel without reduced-motion regressions", () => {
+  const css = read("css/components.css");
+  assert.match(css, /\.settings-tab::after/, "animated underline pseudo-element");
+  assert.match(css, /@keyframes tab-in/, "panel fade/slide keyframe");
+  assert.match(css, /\.settings-panel-tab\.tab-anim/, "panel entrance class");
+  // Reduced-motion handling must still be present so these are zeroed.
+  assert.match(css, /@media\s*\(prefers-reduced-motion: reduce\)/);
+  assert.match(css, /\[data-motion="reduce"\]/);
+});
+
+test("empty state has a restrained seasonal icon and a clearer prompt", () => {
+  const html = read("index.html");
+  assert.match(html, /id="empty-icon"/, "seasonal empty-state icon");
+  assert.match(html, /Search a location to check tonight’s forecast\./, "clearer prompt");
 });

@@ -48,6 +48,28 @@ export function applyAccent(hue) {
   else root.style.removeProperty("--accent-h");
 }
 
+const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : "");
+
+/** Show the read-only "Auto palette: Season" badge only while the palette is Auto. */
+export function updatePaletteBadge(palette, season) {
+  const badge = $("palette-auto-badge");
+  if (!badge) return;
+  if (palette === "auto" && season) {
+    badge.textContent = `Auto palette: ${cap(season)}`;
+    show(badge);
+  } else {
+    hide(badge);
+  }
+}
+
+const SEASON_ICON = { winter: "❄️", spring: "🌸", summer: "☀️", fall: "🍂" };
+
+/** Set the restrained seasonal accent icon shown in the empty state. */
+export function setEmptyIcon(season) {
+  const el = $("empty-icon");
+  if (el) el.textContent = SEASON_ICON[season] || "❄️";
+}
+
 /** Resolve a theme preference to the concrete theme currently shown. */
 export function resolvedTheme() {
   return document.documentElement.getAttribute("data-theme") || "light";
@@ -488,7 +510,16 @@ export function activateTab(tabId, { focus = false } = {}) {
     tab.setAttribute("aria-selected", String(selected));
     tab.tabIndex = selected ? 0 : -1;
     const panel = $(tab.getAttribute("aria-controls"));
-    if (panel) panel.hidden = !selected;
+    if (panel) {
+      panel.hidden = !selected;
+      if (selected) {
+        // Restrained fade/slide-in of the newly shown panel (zeroed under reduced
+        // motion by the global motion rules). Re-trigger via reflow.
+        panel.classList.remove("tab-anim");
+        void panel.offsetWidth;
+        panel.classList.add("tab-anim");
+      }
+    }
     if (selected && focus) tab.focus();
   }
 }

@@ -60,6 +60,27 @@ test("accent hue persists and resets", () => {
   assert.equal(getSettings().accentHue, null);
 });
 
+test("seasonal palette defaults to auto and persists each mode", () => {
+  assert.equal(getSettings().seasonalPalette, "auto");
+  for (const mode of ["winter", "spring", "summer", "fall", "custom", "auto"]) {
+    saveSettings({ seasonalPalette: mode });
+    assert.equal(getSettings().seasonalPalette, mode);
+  }
+});
+
+test("manual hue adjustment is stored as Custom; reset restores Auto", () => {
+  // What main.js persists when the user drags the hue slider.
+  saveSettings({ seasonalPalette: "custom", accentHue: 290 });
+  let s = getSettings();
+  assert.equal(s.seasonalPalette, "custom");
+  assert.equal(s.accentHue, 290);
+  // What main.js persists on Reset.
+  saveSettings({ seasonalPalette: "auto", accentHue: null });
+  s = getSettings();
+  assert.equal(s.seasonalPalette, "auto");
+  assert.equal(s.accentHue, null);
+});
+
 test("local estimate counter increments and resets", () => {
   assert.equal(getEstimateCount(), 0);
   assert.equal(incrementEstimateCount(), 1);
