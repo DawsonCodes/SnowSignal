@@ -8,11 +8,14 @@ from the [National Weather Service](https://www.weather.gov), then runs a transp
 deterministic scoring engine to estimate the chance that school is **closed** or **delayed**.
 
 No backend. No API keys. No sign-up. No tracking. It runs entirely in the browser and
-deploys to GitHub Pages as-is.
+deploys to GitHub Pages as-is. The only third-party calls are Open-Meteo (weather +
+geocoding), the NWS alerts API (U.S. only), and BigDataCloud's free, keyless
+reverse-geocode endpoint for friendly "My location" labels.
 
-> **Status:** first public beta (`v1.0.0-beta.1`). See [Versioning](#versioning) and
-> [ROADMAP.md](ROADMAP.md). The GitHub repository stays named `snow-day-calculator`
-> during beta so the GitHub Pages URL remains stable.
+> **Status:** polish beta (`v1.0.0-beta.2`) — not a stable release. See
+> [Versioning](#versioning), [CHANGELOG.md](CHANGELOG.md), and [ROADMAP.md](ROADMAP.md).
+> The GitHub Pages URL is served from the `/snowsignal/` project subpath and all asset
+> paths are relative so the app keeps working there.
 
 ## Features
 
@@ -23,10 +26,16 @@ deploys to GitHub Pages as-is.
   temperature & wind chill, wind gusts, low visibility, existing snow depth, precip probability,
   official winter alerts, storm timing, district sensitivity, area type, school type, and snow days used
 - 🎨 **Light / dark / midnight-snow** themes (plus frost & slate), with `prefers-color-scheme` defaults
-- 💾 **Saved locations**, **recent searches**, **cached forecasts** (offline-friendly), and **shareable URLs**
-- 📋 One-click **copy summary**, an **hourly timeline**, expandable **advanced settings**, loading
-  skeletons, and clear error states
-- ♿ Accessible: keyboard navigation, focus management, `aria-live` results, and **reduced-motion** support
+- 🍃 **Seasonal atmosphere** — restrained, motion-respecting ambient effects (snow / petals / motes /
+  leaves) with an **Auto** mode that reads the location's hemisphere + date
+- 📅 **School-calendar reminders** — clearly-labeled heuristics for likely summer break, winter break,
+  and weekends (dismissible, never authoritative)
+- 💾 **Saved locations**, **recent searches**, **cached forecasts** (offline-friendly), and **explicit
+  share links** that keep the everyday URL clean
+- 📋 One-click **copy summary** + **copy share link**, an **hourly timeline**, a **forecast-window** label,
+  expandable **advanced settings**, loading skeletons, and clear error states
+- ⚙️ A **grouped Settings** dialog (Appearance / Weather / Data / About) with one-tap data resets
+- ♿ Accessible: keyboard navigation, focus trapping, `aria-live` results, and **reduced-motion** support
 
 ## How the prediction works
 
@@ -54,10 +63,13 @@ js/
   weather.js        # Open-Meteo fetch + forecast→engine-input mapping
   geocode.js        # Open-Meteo geocoding (city / ZIP / postal)
   alerts.js         # optional NWS winter alerts (fails gracefully)
-  storage.js        # localStorage: settings, saved/recent, cached forecasts
-  urlState.js       # shareable URL query params
+  storage.js        # localStorage: settings, saved/recent, cached forecasts, resets
+  urlState.js       # explicit share links (clean URL; defaults omitted)
+  geocode.js        # Open-Meteo geocoding + keyless reverse-geocode labels
+  calendarContext.js# pure season + school-calendar heuristics (unit-tested)
+  atmosphere.js     # lightweight seasonal ambient particle layer
   geolocation.js    # browser geolocation wrapper
-  ui.js             # all DOM rendering + accessibility
+  ui.js             # all DOM rendering + accessibility + motion polish
   main.js           # orchestrator wiring events → fetch → engine → ui
 tests/              # node:test unit tests + fixtures
 ```
@@ -86,7 +98,10 @@ npm test        # or: node --test
 
 They cover the engine (monotonicity, weighting, closure-vs-delay separation, confidence,
 determinism, edge cases), the Open-Meteo→engine mapping (window bucketing, unit conversion),
-the NWS alert summarizer, and the storage layer.
+the NWS alert summarizer, the storage layer (persistence + resets), the season/calendar
+heuristics (hemisphere inversion, summer/winter-break and weekend notices), the clean-URL
+share builder (default omission), the reverse-geocode label parser, atmosphere motion-gating,
+and GitHub Pages relative-path safety.
 
 ## Deploying to GitHub Pages
 
@@ -121,16 +136,19 @@ Notes:
 
 ## Versioning
 
-This is **`v1.0.0-beta.1`** — the **first public beta of the rebuilt SnowSignal app**.
-It exists for real-world browser testing across different locations, devices, and storms.
-Expect rough edges, and please treat predictions as estimates while the engine is tuned
-against actual outcomes. The planned path to a stable `v1.0.0` and beyond is in
-[ROADMAP.md](ROADMAP.md).
+This is **`v1.0.0-beta.2`** — a **polish beta**, still not a stable release. `beta.1` was the
+first public beta of the rebuilt app; `beta.2` keeps the same prediction engine and focuses on
+a roomier desktop layout, seasonal atmosphere, restrained UI motion, school-calendar reminders,
+cleaner URL behavior, friendlier geolocation labels, a reworked Settings dialog, and stronger
+input validation. Please keep treating predictions as estimates while the engine is tuned against
+real outcomes. Full notes are in [CHANGELOG.md](CHANGELOG.md); the road to a stable `v1.0.0` and
+beyond is in [ROADMAP.md](ROADMAP.md).
 
 ## Attribution
 
 - Weather & geocoding: [Open-Meteo](https://open-meteo.com) (free, no key, CC BY 4.0).
 - U.S. winter alerts: [National Weather Service / api.weather.gov](https://www.weather.gov) (public domain).
+- Reverse-geocode labels: [BigDataCloud](https://www.bigdatacloud.com) free client-side endpoint (no key).
 
 ## License
 
