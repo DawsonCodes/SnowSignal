@@ -19,13 +19,20 @@ behavior with explicit share links, friendlier reverse-geocoded geolocation labe
 reworked grouped Settings dialog with data resets, and stronger input validation. See
 [CHANGELOG.md](CHANGELOG.md).
 
-## v1.0.0-beta.3 — current
+## v1.0.0-beta.3
 A further polish beta (not a stable release) on the same transparent engine: a winter-weather
 plausibility gate so benign weather resolves to 0%, a wider desktop workspace, a separate
 Schedule context panel, simplified System/Light/Dark themes with safe accent-hue customization,
 a wider tabbed Settings modal, no unnecessary animation replays, result date/freshness labels,
 a collapsible Weather details panel, a device-local estimate counter, friendlier loading/error
 states, and open-source (MIT) documentation. See [CHANGELOG.md](CHANGELOG.md).
+
+## v1.0.0-beta.4 — current
+The last planned visual-polish beta (not a stable release) on the same engine: a Seasonal palette
+system (Auto/Winter/Spring/Summer/Fall/Custom) with location-aware Auto and a safe accent range,
+subtle time-of-day ambient intensity under Auto, refined per-season atmosphere, Settings-tab motion
+polish, smoother/subtler hourly-forecast scrolling with optional desktop arrows, and a clearer
+seasonal empty state. See [CHANGELOG.md](CHANGELOG.md).
 
 ## v1.0.0 — stable
 Promote to a stable release after bug fixes and real-world testing across a range
