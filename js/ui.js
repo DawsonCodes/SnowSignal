@@ -1,7 +1,8 @@
 // ui.js
 // The ONLY module (besides main.js) that touches the DOM. It renders engine
 // output, manages skeletons/errors, the settings dialog (with a focus trap),
-// theme/motion application, and small flourishes like the toast and confetti.
+// theme/motion application, calendar notices, and restrained motion flourishes
+// (animated gauges, staggered cards, toast, confetti).
 
 import { formatTemp, formatInches, formatHourLabel } from "./format.js";
 
@@ -27,6 +28,12 @@ export function applyTheme(pref) {
     const dark = ["dark", "midnight", "frost", "slate"].includes(resolved);
     icon.textContent = dark ? "☀️" : "🌙";
   }
+  return resolved;
+}
+
+/** Resolve a theme preference to the concrete theme currently shown. */
+export function resolvedTheme() {
+  return document.documentElement.getAttribute("data-theme") || "light";
 }
 
 /** Apply a motion preference: "system" yields to the OS media query. */
@@ -67,24 +74,51 @@ export function clearStates() {
 
 // --- Result rendering ----------------------------------------------------
 
-function setDial(dialId, pct) {
+function animateCount(el, to, { animate }) {
+  const target = Math.round(to);
+  if (!animate) {
+    el.textContent = `${target}%`;
+    return;
+  }
+  const duration = 700;
+  const start = performance.now();
+  const tick = (t) => {
+    const k = Math.min(1, (t - start) / duration);
+    const eased = 1 - Math.pow(1 - k, 3); // ease-out cubic
+    el.textContent = `${Math.round(target * eased)}%`;
+    if (k < 1) requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+
+function setDial(dialId, pct, opts) {
   const dial = $(dialId);
   const fill = dial.querySelector(".dial-fill");
-  fill.style.strokeDashoffset = String(DIAL_CIRCUMFERENCE * (1 - pct / 100));
+  const offsetFor = (p) => String(DIAL_CIRCUMFERENCE * (1 - p / 100));
+  if (opts.animate) {
+    // Start from empty so the ring sweeps up to its value on every new result.
+    fill.style.strokeDashoffset = offsetFor(0);
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => (fill.style.strokeDashoffset = offsetFor(pct)))
+    );
+  } else {
+    fill.style.strokeDashoffset = offsetFor(pct);
+  }
   // Color the closure dial by severity.
   if (dialId === "dial-closure") {
     const color = pct >= 65 ? "var(--good)" : pct >= 35 ? "var(--warn)" : "var(--muted)";
     fill.style.stroke = color;
   }
-  dial.querySelector(".dial-pct").textContent = `${pct}%`;
+  animateCount(dial.querySelector(".dial-pct"), pct, opts);
 }
 
 export function renderResult(result, meta) {
   clearStates();
   hide($("empty-state"));
+  const animate = meta.animate !== false;
 
-  setDial("dial-closure", result.closurePct);
-  setDial("dial-delay", result.delayPct);
+  setDial("dial-closure", result.closurePct, { animate });
+  setDial("dial-delay", result.delayPct, { animate });
 
   $("chip-location").textContent = meta.placeLabel || "Your location";
   const confChip = $("chip-confidence");
@@ -93,8 +127,18 @@ export function renderResult(result, meta) {
 
   $("recommendation").textContent = result.recommendation;
 
-  renderFactors(result.factors);
-  renderTimeline(meta.timeline || [], meta.unit);
+  const fw = $("forecast-window");
+  if (fw) {
+    if (meta.forecastWindow) {
+      fw.textContent = `Forecast window: ${meta.forecastWindow}`;
+      show(fw);
+    } else {
+      hide(fw);
+    }
+  }
+
+  renderFactors(result.factors, { animate });
+  renderTimeline(meta.timeline || [], meta.unit, { animate });
 
   const note = $("cache-note");
   if (meta.fromCache && meta.fetchedAt) {
@@ -109,13 +153,21 @@ export function renderResult(result, meta) {
   }
 
   show($("result"));
+  // Re-trigger the card reveal animation on each render.
+  const card = $("result");
+  card.classList.remove("reveal");
+  if (animate) {
+    void card.offsetWidth; // force reflow so the animation restarts
+    card.classList.add("reveal");
+  }
 }
 
-function renderFactors(factors) {
+function renderFactors(factors, { animate }) {
   const list = $("factors");
   list.innerHTML = "";
   // Show the factors that actually move the needle, biggest first.
   const sorted = [...factors].sort((a, b) => Math.abs(b.points) - Math.abs(a.points));
+  let shown = 0;
   for (const f of sorted) {
     if (Math.abs(f.points) < 0.5) continue;
     const li = document.createElement("li");
@@ -126,10 +178,19 @@ function renderFactors(factors) {
         <span class="factor-label"></span>
         <span class="factor-detail"></span>
       </div>
-      <div class="factor-bar"><span style="width:${widthPct}%"></span></div>`;
+      <div class="factor-bar"><span></span></div>`;
     li.querySelector(".factor-label").textContent = f.label;
     li.querySelector(".factor-detail").textContent = f.detail;
+    const bar = li.querySelector(".factor-bar > span");
+    bar.style.transitionDelay = animate ? `${shown * 60}ms` : "0ms";
+    bar.style.width = animate ? "0%" : `${widthPct}%`;
     list.appendChild(li);
+    if (animate) {
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => (bar.style.width = `${widthPct}%`))
+      );
+    }
+    shown++;
   }
 }
 
@@ -146,12 +207,16 @@ const WEATHER_ICON = (code) => {
   return "🌡️";
 };
 
-function renderTimeline(timeline, unit) {
+function renderTimeline(timeline, unit, { animate }) {
   const wrap = $("timeline");
   wrap.innerHTML = "";
-  for (const h of timeline) {
+  timeline.forEach((h, i) => {
     const div = document.createElement("div");
     div.className = "t-hour";
+    if (animate) {
+      div.classList.add("t-enter");
+      div.style.animationDelay = `${Math.min(i, 12) * 35}ms`;
+    }
     const snow = h.snowIn > 0.05 ? formatInches(h.snowIn) : "";
     div.innerHTML = `
       <span class="t-time"></span>
@@ -162,7 +227,7 @@ function renderTimeline(timeline, unit) {
     div.querySelector(".t-temp").textContent = formatTemp(h.tempF, unit);
     div.querySelector(".t-snow").textContent = snow;
     wrap.appendChild(div);
-  }
+  });
 }
 
 export function renderAlertBanner(alert) {
@@ -175,6 +240,44 @@ export function renderAlertBanner(alert) {
   $("alert-title").textContent = alert.event || "Winter weather alert";
   $("alert-text").textContent = alert.headline || "";
   show(banner);
+}
+
+// --- Calendar / schedule notices -----------------------------------------
+
+// Track per-session dismissals so a notice doesn't reappear after the user closes it.
+const dismissedNotices = new Set();
+
+export function renderCalendarNotices(notices) {
+  const wrap = $("calendar-notices");
+  if (!wrap) return;
+  wrap.innerHTML = "";
+  const visible = (notices || []).filter((n) => !dismissedNotices.has(n.id));
+  if (!visible.length) {
+    hide(wrap);
+    return;
+  }
+  for (const n of visible) {
+    const el = document.createElement("div");
+    el.className = "calendar-notice";
+    el.setAttribute("role", "note");
+    el.innerHTML = `
+      <span class="cn-icon" aria-hidden="true">📅</span>
+      <div class="cn-body">
+        <strong class="cn-title"></strong>
+        <p class="cn-text"></p>
+        <span class="cn-tag">Schedule reminder — not official school-calendar data</span>
+      </div>
+      <button type="button" class="cn-dismiss icon-btn" aria-label="Dismiss reminder">✕</button>`;
+    el.querySelector(".cn-title").textContent = n.title;
+    el.querySelector(".cn-text").textContent = n.message;
+    el.querySelector(".cn-dismiss").addEventListener("click", () => {
+      dismissedNotices.add(n.id);
+      el.remove();
+      if (!wrap.children.length) hide(wrap);
+    });
+    wrap.appendChild(el);
+  }
+  show(wrap);
 }
 
 // --- Saved / recent / suggestions ---------------------------------------
@@ -257,24 +360,31 @@ export function closeSuggestions() {
   $("location").setAttribute("aria-expanded", "false");
 }
 
-// --- Settings dialog with focus trap ------------------------------------
+// --- Settings dialog with focus trap + entrance/exit animation -----------
 
 let lastFocused = null;
+const FOCUSABLE = "a[href], button, input";
 
 export function openSettings() {
   const panel = $("settings-panel");
   lastFocused = document.activeElement;
   show(panel);
-  const focusables = panel.querySelectorAll("button, input");
+  requestAnimationFrame(() => panel.classList.add("is-open"));
+  const focusables = panel.querySelectorAll(FOCUSABLE);
   if (focusables.length) focusables[0].focus();
   panel.addEventListener("keydown", trapFocus);
 }
 
 export function closeSettings() {
   const panel = $("settings-panel");
-  hide(panel);
+  if (panel.hidden) return;
+  panel.classList.remove("is-open");
   panel.removeEventListener("keydown", trapFocus);
-  if (lastFocused) lastFocused.focus();
+  // Hide after the exit transition; under reduced motion the transition is ~0ms.
+  window.setTimeout(() => {
+    hide(panel);
+    if (lastFocused) lastFocused.focus();
+  }, 200);
 }
 
 function trapFocus(e) {
@@ -284,7 +394,7 @@ function trapFocus(e) {
   }
   if (e.key !== "Tab") return;
   const panel = $("settings-panel");
-  const items = [...panel.querySelectorAll("button, input")].filter((el) => !el.disabled);
+  const items = [...panel.querySelectorAll(FOCUSABLE)].filter((el) => !el.disabled);
   if (!items.length) return;
   const first = items[0];
   const last = items[items.length - 1];
@@ -304,6 +414,9 @@ export function toast(message) {
   const t = $("toast");
   t.textContent = message;
   show(t);
+  t.classList.remove("toast-in");
+  void t.offsetWidth;
+  t.classList.add("toast-in");
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => hide(t), 2400);
 }

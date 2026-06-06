@@ -3,7 +3,7 @@
 // Holds the small amount of app state; all business logic lives in the modules.
 
 import { predictSnowDay } from "./engine.js";
-import { searchPlaces, findPlace, isUnitedStates } from "./geocode.js";
+import { searchPlaces, findPlace, isUnitedStates, reverseGeocode } from "./geocode.js";
 import { fetchForecast, mapForecastToEngineInput, buildHourlyTimeline } from "./weather.js";
 import { fetchWinterAlerts, EMPTY_ALERTS } from "./alerts.js";
 import { getCurrentPosition } from "./geolocation.js";
@@ -11,18 +11,30 @@ import { formatPlaceLabel } from "./format.js";
 import {
   getSettings,
   saveSettings,
+  resetSchoolSettings,
+  resetPreferences,
   getSavedLocations,
   saveLocation,
   removeLocation,
+  clearSavedLocations,
   getRecentSearches,
   addRecentSearch,
+  clearRecentSearches,
   getCachedForecast,
   setCachedForecast,
 } from "./storage.js";
-import { readUrlState, writeUrlState, buildShareUrl } from "./urlState.js";
+import { readUrlState, buildShareUrl } from "./urlState.js";
+import {
+  getCalendarNotices,
+  describeForecastWindow,
+  forecastTargetDate,
+} from "./calendarContext.js";
+import { applyAtmosphere } from "./atmosphere.js";
 import * as ui from "./ui.js";
 
 const { $ } = ui;
+
+const APP_VERSION = "1.0.0-beta.2";
 
 // --- App state -----------------------------------------------------------
 const state = {
@@ -52,11 +64,15 @@ function applySettings() {
   $("days-used").value = String(state.settings.snowDaysUsed);
   $("days-allowed").value = String(state.settings.snowDaysAllowed);
   updateSensitivityOutput();
+  validateDays();
 
   // Settings dialog radios
   setRadio("theme", state.settings.theme);
+  setRadio("atmosphere", state.settings.atmosphere);
   setRadio("temp-unit", state.settings.tempUnit);
   setRadio("reduced-motion", state.settings.reducedMotion);
+
+  applyAtmosphereNow();
 }
 
 function setRadio(name, value) {
@@ -68,6 +84,33 @@ function updateSensitivityOutput() {
   const v = Number($("sensitivity").value);
   const label = v >= 0.66 ? "Closes readily" : v <= 0.34 ? "Rarely closes" : "Average";
   $("sensitivity-out").textContent = label;
+}
+
+/**
+ * Validate the snow-day number inputs: no negatives, capped at a sane maximum.
+ * "Used" is allowed to exceed "allowed" (it happens in real districts) — we just
+ * surface an explanatory note. Returns the cleaned values.
+ */
+function validateDays() {
+  const clampInt = (id, max) => {
+    const el = $(id);
+    let v = Math.round(Number(el.value));
+    if (!Number.isFinite(v)) v = 0;
+    v = Math.max(0, Math.min(max, v));
+    el.value = String(v);
+    return v;
+  };
+  const used = clampInt("days-used", 60);
+  const allowed = clampInt("days-allowed", 60);
+  const note = $("days-note");
+  if (used > allowed) {
+    note.textContent =
+      "Used snow days exceed the district allowance. This may make the district more reluctant to close.";
+    note.hidden = false;
+  } else {
+    note.hidden = true;
+  }
+  return { used, allowed };
 }
 
 function gatherSchoolContext() {
@@ -92,6 +135,28 @@ function persistSchoolContext() {
   });
 }
 
+// --- Seasonal atmosphere + calendar notices ------------------------------
+
+function applyAtmosphereNow() {
+  applyAtmosphere({
+    pref: state.settings.atmosphere,
+    theme: ui.resolvedTheme(),
+    lat: state.place ? state.place.latitude : null,
+    date: new Date(),
+    motionAllowed: ui.motionAllowed(state.settings.reducedMotion),
+  });
+}
+
+function refreshCalendarNotices() {
+  const now = new Date();
+  ui.renderCalendarNotices(
+    getCalendarNotices({
+      date: forecastTargetDate(now),
+      lat: state.place ? state.place.latitude : null,
+    })
+  );
+}
+
 // --- Core: load a place and predict -------------------------------------
 
 async function loadPlace(place) {
@@ -99,7 +164,8 @@ async function loadPlace(place) {
   ui.closeSuggestions();
   $("location").value = formatPlaceLabel(place);
   ui.showSkeleton();
-  updateUrl();
+  applyAtmosphereNow(); // hemisphere may flip the auto season
+  refreshCalendarNotices();
 
   const lat = place.latitude;
   const lon = place.longitude;
@@ -167,6 +233,8 @@ function recompute() {
     timeline,
     fetchedAt: state.fetchedAt,
     fromCache: state.fromCache,
+    forecastWindow: describeForecastWindow(now),
+    animate: ui.motionAllowed(state.settings.reducedMotion),
   });
   updateSaveButton();
 
@@ -255,22 +323,17 @@ async function useMyLocation() {
   ui.showSkeleton();
   try {
     const { lat, lon } = await getCurrentPosition();
-    // Reverse-lookup a friendly name via a nearby search; fall back to coords.
-    const place = (await reverseName(lat, lon)) || {
-      name: "My location",
-      latitude: lat,
-      longitude: lon,
-    };
+    // Reverse-geocode to a friendly label; keep exact coords for the forecast.
+    let place;
+    try {
+      place = await reverseGeocode(lat, lon, { signal: timeoutSignal(4000) });
+    } catch {
+      place = { name: `${lat.toFixed(2)}, ${lon.toFixed(2)}`, latitude: lat, longitude: lon };
+    }
     await loadPlace(place);
   } catch (err) {
     ui.showError(err.message || "Couldn't get your location.");
   }
-}
-
-// Open-Meteo geocoding has no reverse endpoint; approximate by keeping coords
-// but giving a readable label. We simply use the coordinates as the place.
-async function reverseName(lat, lon) {
-  return { name: `${lat.toFixed(2)}, ${lon.toFixed(2)}`, latitude: lat, longitude: lon };
 }
 
 // --- Quick lists (saved + recent) ---------------------------------------
@@ -319,7 +382,7 @@ function onSaveLocation() {
   ui.toast("Location saved");
 }
 
-// --- Copy summary --------------------------------------------------------
+// --- Copy summary + share link ------------------------------------------
 
 function buildSummary() {
   const r = state.result;
@@ -331,22 +394,29 @@ function buildSummary() {
     `• Confidence: ${r.confidence}`,
     `• ${r.recommendation}`,
   ];
-  const url = buildShareUrl(currentShareState());
-  return `${lines.join("\n")}\n\nKnow before the bell · ${url}`;
+  return `${lines.join("\n")}\n\nKnow before the bell · ${buildShareUrl(currentShareState())}`;
 }
 
-async function onCopySummary() {
-  if (!state.result) return;
-  const text = buildSummary();
+async function copyText(text, okMsg) {
   try {
     await navigator.clipboard.writeText(text);
-    ui.toast("Summary copied to clipboard");
+    ui.toast(okMsg);
   } catch {
     ui.toast("Copy failed — select and copy manually");
   }
 }
 
-// --- URL state -----------------------------------------------------------
+async function onCopySummary() {
+  if (!state.result) return;
+  await copyText(buildSummary(), "Summary copied to clipboard");
+}
+
+async function onCopyShareLink() {
+  if (!state.place) return;
+  await copyText(buildShareUrl(currentShareState()), "Share link copied to clipboard");
+}
+
+// --- Share-state assembly (used ONLY for explicit share actions) ---------
 
 function currentShareState() {
   const s = {
@@ -356,7 +426,6 @@ function currentShareState() {
     used: Number($("days-used").value) || 0,
     allowed: Number($("days-allowed").value) || 0,
     unit: state.settings.tempUnit,
-    theme: state.settings.theme,
   };
   if (state.place) {
     s.lat = state.place.latitude;
@@ -364,10 +433,6 @@ function currentShareState() {
     s.loc = state.place.name;
   }
   return s;
-}
-
-function updateUrl() {
-  writeUrlState(currentShareState());
 }
 
 // --- Settings dialog -----------------------------------------------------
@@ -384,7 +449,15 @@ function wireSettings() {
       if (r.checked) {
         state.settings = saveSettings({ theme: r.value });
         ui.applyTheme(r.value);
-        updateUrl();
+        applyAtmosphereNow(); // Midnight ↔ other themes changes the auto atmosphere
+      }
+    })
+  );
+  document.querySelectorAll('input[name="atmosphere"]').forEach((r) =>
+    r.addEventListener("change", () => {
+      if (r.checked) {
+        state.settings = saveSettings({ atmosphere: r.value });
+        applyAtmosphereNow();
       }
     })
   );
@@ -393,7 +466,6 @@ function wireSettings() {
       if (r.checked) {
         state.settings = saveSettings({ tempUnit: r.value });
         recompute();
-        updateUrl();
       }
     })
   );
@@ -402,11 +474,41 @@ function wireSettings() {
       if (r.checked) {
         state.settings = saveSettings({ reducedMotion: r.value });
         ui.applyMotion(r.value);
+        applyAtmosphereNow(); // particles are gated by motion
       }
     })
   );
 
-  // Quick theme toggle in the header cycles light ↔ dark-ish.
+  // Data actions (destructive → confirm, then toast).
+  $("clear-recent").addEventListener("click", () => {
+    if (!confirm("Clear your recent locations?")) return;
+    clearRecentSearches();
+    refreshQuickLists();
+    ui.toast("Recent locations cleared");
+  });
+  $("clear-saved").addEventListener("click", () => {
+    if (!confirm("Clear your saved locations?")) return;
+    clearSavedLocations();
+    refreshQuickLists();
+    updateSaveButton();
+    ui.toast("Saved locations cleared");
+  });
+  $("reset-school").addEventListener("click", () => {
+    if (!confirm("Reset school settings to their defaults?")) return;
+    state.settings = resetSchoolSettings();
+    applySettings();
+    recompute();
+    ui.toast("School settings reset");
+  });
+  $("reset-prefs").addEventListener("click", () => {
+    if (!confirm("Reset all preferences to defaults? Your saved and recent locations are kept.")) return;
+    state.settings = resetPreferences();
+    applySettings();
+    recompute();
+    ui.toast("Preferences reset");
+  });
+
+  // Quick theme toggle in the header cycles light ↔ midnight.
   $("theme-toggle").addEventListener("click", () => {
     const isDark = ["dark", "midnight", "frost", "slate"].includes(
       document.documentElement.getAttribute("data-theme")
@@ -415,7 +517,7 @@ function wireSettings() {
     state.settings = saveSettings({ theme: next });
     ui.applyTheme(next);
     setRadio("theme", next);
-    updateUrl();
+    applyAtmosphereNow();
   });
 }
 
@@ -425,7 +527,6 @@ function wireContext() {
   ["school-type", "area-type"].forEach((id) =>
     $(id).addEventListener("change", () => {
       persistSchoolContext();
-      updateUrl();
       recompute();
     })
   );
@@ -433,14 +534,11 @@ function wireContext() {
     updateSensitivityOutput();
     persistSchoolContext();
   });
-  $("sensitivity").addEventListener("change", () => {
-    updateUrl();
-    recompute();
-  });
+  $("sensitivity").addEventListener("change", recompute);
   ["days-used", "days-allowed"].forEach((id) =>
     $(id).addEventListener("change", () => {
+      validateDays();
       persistSchoolContext();
-      updateUrl();
       recompute();
     })
   );
@@ -448,7 +546,7 @@ function wireContext() {
 
 // --- Helpers -------------------------------------------------------------
 
-/** AbortSignal that fires after `ms` (for the NWS timeout). */
+/** AbortSignal that fires after `ms` (for network timeouts). */
 function timeoutSignal(ms) {
   const ctrl = new AbortController();
   setTimeout(() => ctrl.abort(), ms);
@@ -475,8 +573,12 @@ function init() {
   const urlState = applyUrlOverrides();
   applySettings();
   refreshQuickLists();
+  refreshCalendarNotices();
   wireSettings();
   wireContext();
+
+  const versionEl = $("app-version");
+  if (versionEl) versionEl.textContent = `SnowSignal v${APP_VERSION}`;
 
   // Search wiring
   $("location").addEventListener("input", onSearchInput);
@@ -484,6 +586,7 @@ function init() {
   $("location").addEventListener("blur", () => setTimeout(ui.closeSuggestions, 150));
   $("geo-btn").addEventListener("click", useMyLocation);
   $("copy-btn").addEventListener("click", onCopySummary);
+  $("share-btn").addEventListener("click", onCopyShareLink);
   $("save-btn").addEventListener("click", onSaveLocation);
   $("retry-btn").addEventListener("click", () => {
     if (state.place) loadPlace(state.place);
@@ -494,7 +597,10 @@ function init() {
     window
       .matchMedia("(prefers-color-scheme: dark)")
       .addEventListener("change", () => {
-        if (state.settings.theme === "system") ui.applyTheme("system");
+        if (state.settings.theme === "system") {
+          ui.applyTheme("system");
+          applyAtmosphereNow();
+        }
       });
   }
 
