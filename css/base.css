@@ -10,6 +10,17 @@
   margin: 0;
 }
 
+/*
+ * The `hidden` attribute / DOM property is how the app shows and hides UI
+ * (suggestions, alert banner, skeleton, result, error state, toast, and the
+ * settings modal). Its default `display: none` is only a weak UA style, so any
+ * component rule that sets `display` (e.g. `.settings-panel { display: flex }`)
+ * overrides it and the element stays visible. This makes `[hidden]` always win.
+ */
+[hidden] {
+  display: none !important;
+}
+
 html {
   -webkit-text-size-adjust: 100%;
 }
