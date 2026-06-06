@@ -8,8 +8,8 @@
   --radius-lg: 20px;
   --radius-md: 12px;
   --radius-sm: 8px;
-  --gap: 16px;
-  --maxw: 760px;
+  --gap: 18px;
+  --maxw: 880px; /* roomier desktop column; collapses cleanly on mobile */
 
   /* brand accents shared across themes */
   --accent: #2563eb;
