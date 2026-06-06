@@ -51,19 +51,17 @@ export function seasonFromLatitude(lat, date) {
  * Resolve which ambient atmosphere to render from the user's preference.
  * @param {object} opts
  * @param {'auto'|'winter'|'spring'|'summer'|'fall'|'off'} opts.pref
- * @param {string} opts.theme           current concrete theme (e.g. "midnight")
+ * @param {string} [opts.theme]         current concrete theme (unused; kept for call-site compatibility)
  * @param {number|null} opts.lat
  * @param {Date} opts.date
  * @returns {'winter'|'spring'|'summer'|'fall'|null}  null = no ambient effect
  */
-export function resolveAtmosphere({ pref, theme, lat, date }) {
+export function resolveAtmosphere({ pref, lat, date }) {
   if (pref === "off") return null;
   if (pref === "winter" || pref === "spring" || pref === "summer" || pref === "fall") {
     return pref;
   }
-  // "auto": Midnight snow keeps a snowfall identity year-round; otherwise follow
-  // the local season.
-  if (theme === "midnight") return "winter";
+  // "auto": follow the local season (southern hemisphere inverts inside the helper).
   return seasonFromLatitude(lat, date);
 }
 

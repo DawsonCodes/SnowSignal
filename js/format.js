@@ -75,6 +75,47 @@ export function formatPlaceLabel(place) {
   return parts.filter((p, i) => p !== parts[i - 1]).join(", ");
 }
 
+// --- Date + freshness ----------------------------------------------------
+
+/** Format a date/time in a given IANA timezone, falling back to the local zone. */
+function formatWithZone(d, opts, timeZone) {
+  if (timeZone) {
+    try {
+      return new Intl.DateTimeFormat("en-US", { ...opts, timeZone }).format(d);
+    } catch {
+      /* invalid timezone → fall back to the runtime's local zone */
+    }
+  }
+  return new Intl.DateTimeFormat("en-US", opts).format(d);
+}
+
+/**
+ * Friendly local date for the forecast header, e.g. "Monday, January 12".
+ * @param {Date|number|string} date
+ * @param {string} [timeZone]  IANA zone (e.g. "America/Detroit"); local if omitted/invalid.
+ */
+export function formatLocalDate(date, timeZone) {
+  const d = date instanceof Date ? date : new Date(date);
+  if (Number.isNaN(d.getTime())) return "";
+  return formatWithZone(d, { weekday: "long", month: "long", day: "numeric" }, timeZone);
+}
+
+/**
+ * Forecast freshness stamp, e.g. "Updated 3:27 PM EST".
+ * @param {Date|number|string} ts
+ * @param {string} [timeZone]
+ */
+export function formatUpdatedAt(ts, timeZone) {
+  const d = ts instanceof Date ? ts : new Date(ts);
+  if (Number.isNaN(d.getTime())) return "";
+  const time = formatWithZone(
+    d,
+    { hour: "numeric", minute: "2-digit", timeZoneName: "short" },
+    timeZone
+  );
+  return `Updated ${time}`;
+}
+
 /** Pretty 12-hour clock label from an ISO-ish local time string. */
 export function formatHourLabel(isoLocal) {
   const timePart = String(isoLocal).split("T")[1] || "";

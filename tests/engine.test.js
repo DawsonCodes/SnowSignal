@@ -1,7 +1,7 @@
 // Unit tests for the pure prediction engine.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { predictSnowDay } from "../js/engine.js";
+import { predictSnowDay, hasMeaningfulWinterHazard } from "../js/engine.js";
 
 // A neutral baseline scenario; helpers tweak one dimension at a time.
 function baseInput(overrides = {}) {
@@ -172,6 +172,67 @@ test("guards against NaN / missing fields without throwing", () => {
   assert.doesNotThrow(() => predictSnowDay({}));
   const r = predictSnowDay({ overnightSnowIn: "not a number", iceRisk: undefined });
   assert.ok(r.closurePct >= 0 && r.closurePct <= 100);
+});
+
+// --- Winter-weather plausibility gate ------------------------------------
+
+// A genuinely warm, calm summer day: no snow, no ice, no alert, warm wind chill.
+function warmDay(overrides = {}) {
+  return baseInput({
+    overnightSnowIn: 0,
+    morningSnowIn: 0,
+    snowDepthIn: 0,
+    precipProbability: 0.1,
+    iceRisk: 0,
+    lowTempF: 68,
+    windChillF: 70,
+    windGustMph: 5,
+    visibilityMi: 10,
+    ...overrides,
+  });
+}
+
+test("gate: warm summer weather with no winter hazard resolves to 0%", () => {
+  const r = predictSnowDay(warmDay());
+  assert.equal(r.closurePct, 0);
+  assert.equal(r.delayPct, 0);
+  assert.equal(r.gated, true);
+  assert.match(r.gateReason, /winter-weather hazard/i);
+});
+
+test("gate: maxed-out district sensitivity alone cannot create risk", () => {
+  const r = predictSnowDay(warmDay({ districtSensitivity: 1, schoolType: "elementary", areaType: "rural" }));
+  assert.equal(r.closurePct, 0);
+  assert.equal(r.delayPct, 0);
+});
+
+test("gate: warm-weather wind alone cannot create a snow-day risk", () => {
+  const r = predictSnowDay(warmDay({ windGustMph: 60, windChillF: 65 }));
+  assert.equal(r.closurePct, 0);
+  assert.equal(r.delayPct, 0);
+});
+
+test("gate: real winter hazards still pass through", () => {
+  assert.equal(hasMeaningfulWinterHazard(warmDay({ morningSnowIn: 1 })), true); // snow
+  assert.equal(hasMeaningfulWinterHazard(warmDay({ iceRisk: 0.5 })), true); // ice
+  assert.equal(
+    hasMeaningfulWinterHazard(warmDay({ hasWinterAlert: true, alertSeverity: "warning" })),
+    true
+  ); // official alert
+  assert.equal(hasMeaningfulWinterHazard(warmDay({ windChillF: -15 })), true); // dangerous cold
+  const snowy = predictSnowDay(warmDay({ overnightSnowIn: 4, morningSnowIn: 3, lowTempF: 25 }));
+  assert.equal(snowy.gated, false);
+  assert.ok(snowy.closurePct > 0);
+});
+
+test("gate: an unusual out-of-season snow/ice event is NOT blocked by the month", () => {
+  // The engine has no notion of the calendar — only the weather signals decide.
+  const freakSnow = predictSnowDay(warmDay({ lowTempF: 30, overnightSnowIn: 3, morningSnowIn: 1 }));
+  assert.equal(freakSnow.gated, false);
+  assert.ok(freakSnow.closurePct > 0);
+  const freakIce = predictSnowDay(warmDay({ lowTempF: 31, iceRisk: 0.7 }));
+  assert.equal(freakIce.gated, false);
+  assert.ok(freakIce.closurePct > 0);
 });
 
 test("factor breakdown exposes proportional bar data", () => {

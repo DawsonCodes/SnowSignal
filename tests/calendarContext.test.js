@@ -42,21 +42,25 @@ test("resolveAtmosphere honors explicit choices and Off", () => {
   assert.equal(resolveAtmosphere({ ...base, pref: "summer" }), "summer");
 });
 
-test("resolveAtmosphere auto follows season, but Midnight keeps snow year-round", () => {
-  // Auto in July (northern) → summer.
+test("resolveAtmosphere auto follows the local season regardless of theme", () => {
+  // Auto in July (northern) → summer, independent of the chosen theme.
   assert.equal(
     resolveAtmosphere({ pref: "auto", theme: "light", lat: 42, date: d("2026-07-15T12:00") }),
     "summer"
   );
-  // Midnight theme in July still resolves to winter snow under auto.
   assert.equal(
-    resolveAtmosphere({ pref: "auto", theme: "midnight", lat: 42, date: d("2026-07-15T12:00") }),
+    resolveAtmosphere({ pref: "auto", theme: "dark", lat: 42, date: d("2026-07-15T12:00") }),
+    "summer"
+  );
+  // Auto in January (northern) → winter; snowfall still reachable via Atmosphere: Winter.
+  assert.equal(
+    resolveAtmosphere({ pref: "auto", theme: "dark", lat: 42, date: d("2026-01-15T12:00") }),
     "winter"
   );
-  // But an explicit summer choice is respected even in midnight.
+  // An explicit choice is always respected.
   assert.equal(
-    resolveAtmosphere({ pref: "summer", theme: "midnight", lat: 42, date: d("2026-07-15T12:00") }),
-    "summer"
+    resolveAtmosphere({ pref: "winter", theme: "light", lat: 42, date: d("2026-07-15T12:00") }),
+    "winter"
   );
 });
 

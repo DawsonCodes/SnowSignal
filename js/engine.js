@@ -92,6 +92,36 @@ function normalize(input = {}) {
 const alertWeight = (severity) =>
   severity === "warning" ? 1 : severity === "watch" ? 0.6 : severity === "advisory" ? 0.45 : 0;
 
+// --- Winter-weather plausibility gate ------------------------------------
+// Thresholds describing a *plausible winter hazard*, derived only from signals
+// weather.js already fetches. Deliberately month-agnostic: a freak out-of-season
+// snow or ice event still counts. Wind on its own, calendar month, and district
+// sensitivity are intentionally NOT hazard signals — none of them can manufacture
+// a snow-day risk in otherwise-benign weather.
+const HAZARD = {
+  snowIn: 0.5, // meaningful frozen accumulation across the overnight+morning window
+  iceRisk: 0.2, // any hint of freezing rain / wintry mix
+  snowDepthIn: 2, // lingering snowpack still on the ground…
+  packTempF: 34, // …while it is cold enough to refreeze / not melt off
+  windChillF: 0, // dangerous cold can close or delay schools without precipitation
+};
+
+/**
+ * Is there any meaningful winter-weather hazard in the forecast window?
+ * Accepts either a raw SnowDayInput or an already-normalized object.
+ * @param {SnowDayInput} input
+ * @returns {boolean}
+ */
+export function hasMeaningfulWinterHazard(input) {
+  const x = normalize(input);
+  if (x.overnightSnowIn + x.morningSnowIn >= HAZARD.snowIn) return true;
+  if (x.iceRisk >= HAZARD.iceRisk) return true;
+  if (x.hasWinterAlert) return true;
+  if (x.snowDepthIn >= HAZARD.snowDepthIn && x.lowTempF <= HAZARD.packTempF) return true;
+  if (x.windChillF <= HAZARD.windChillF) return true;
+  return false;
+}
+
 // "Is there actually a storm?" 0..1. Storm timing only matters when snow/ice exists —
 // otherwise a clear day would score timing points just for defaulting to "overnight".
 const stormPresence = (x) =>
@@ -401,19 +431,42 @@ export function predictSnowDay(input) {
   const factors = closureFactors(x);
 
   const rawClosure = factors.reduce((sum, f) => sum + f.points, 0);
-  const closurePct = clamp(Math.round(rawClosure * CLOSURE_SCALE), 0, CLOSURE_MAX);
+  let closurePct = clamp(Math.round(rawClosure * CLOSURE_SCALE), 0, CLOSURE_MAX);
 
   const rawDelay = rawDelayScore(x);
   // Couple delay to closure: once a closure becomes likely (>40%), a delay grows less
   // likely (they would simply close instead). Below 40% closure there is no suppression,
   // so genuinely marginal storms can favor a delay over a full closure.
   const suppression = 1 - Math.max(0, (closurePct - 40) / 60) * 0.8;
-  const delayPct = clamp(Math.round(saturate(rawDelay, DELAY_K) * suppression), 0, 100);
+  let delayPct = clamp(Math.round(saturate(rawDelay, DELAY_K) * suppression), 0, 100);
+
+  // Plausibility gate: with no meaningful winter hazard, the estimate is 0%.
+  // This keeps district sensitivity, warm-weather wind, or calendar quirks from
+  // ever producing a phantom snow-day chance. The factor breakdown is preserved
+  // so the UI can stay transparent about why the estimate is zero.
+  const gated = !hasMeaningfulWinterHazard(x);
+  let gateReason = "";
+  if (gated) {
+    closurePct = 0;
+    delayPct = 0;
+    gateReason = "No meaningful winter-weather hazard in the forecast window.";
+  }
 
   const { confidence, confidenceScore } = computeConfidence(x, closurePct);
-  const recommendation = buildRecommendation(closurePct, delayPct, confidence);
+  const recommendation = gated
+    ? "No winter-weather hazard in the forecast window, so school should be open and on time."
+    : buildRecommendation(closurePct, delayPct, confidence);
 
-  return { closurePct, delayPct, confidence, confidenceScore, recommendation, factors };
+  return {
+    closurePct,
+    delayPct,
+    confidence,
+    confidenceScore,
+    recommendation,
+    factors,
+    gated,
+    gateReason,
+  };
 }
 
 // --- tiny local helpers --------------------------------------------------
