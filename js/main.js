@@ -325,14 +325,14 @@ function buildSummary() {
   const r = state.result;
   const place = formatPlaceLabel(state.place);
   const lines = [
-    `Snow Day estimate${place ? ` for ${place}` : ""}:`,
+    `SnowSignal — snow day & delay estimate${place ? ` for ${place}` : ""}:`,
     `• Chance school is closed: ${r.closurePct}%`,
     `• Chance of a 2-hour delay: ${r.delayPct}%`,
     `• Confidence: ${r.confidence}`,
     `• ${r.recommendation}`,
   ];
   const url = buildShareUrl(currentShareState());
-  return `${lines.join("\n")}\n\n${url}`;
+  return `${lines.join("\n")}\n\nKnow before the bell · ${url}`;
 }
 
 async function onCopySummary() {

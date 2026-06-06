@@ -1,12 +1,18 @@
-# Snow Day Calculator
+# SnowSignal
 
-A free, modern, **fully static** snow day calculator. It pulls live weather from
+**Know before the bell.** — A transparent snow-day and school-delay predictor.
+
+A free, modern, **fully static** web app. It pulls live weather from
 [Open-Meteo](https://open-meteo.com) and (for U.S. locations) official winter alerts
 from the [National Weather Service](https://www.weather.gov), then runs a transparent,
 deterministic scoring engine to estimate the chance that school is **closed** or **delayed**.
 
 No backend. No API keys. No sign-up. No tracking. It runs entirely in the browser and
 deploys to GitHub Pages as-is.
+
+> **Status:** first public beta (`v1.0.0-beta.1`). See [Versioning](#versioning) and
+> [ROADMAP.md](ROADMAP.md). The GitHub repository stays named `snow-day-calculator`
+> during beta so the GitHub Pages URL remains stable.
 
 ## Features
 
@@ -112,6 +118,14 @@ Notes:
 - NWS alerts are **U.S.-only**; outside the U.S. the app still works but shows no official alerts.
 - District sensitivity, area type, and snow-days-used are **your inputs** — adjust them to match
   your district.
+
+## Versioning
+
+This is **`v1.0.0-beta.1`** — the **first public beta of the rebuilt SnowSignal app**.
+It exists for real-world browser testing across different locations, devices, and storms.
+Expect rough edges, and please treat predictions as estimates while the engine is tuned
+against actual outcomes. The planned path to a stable `v1.0.0` and beyond is in
+[ROADMAP.md](ROADMAP.md).
 
 ## Attribution
 

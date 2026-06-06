@@ -619,6 +619,11 @@ input[type="range"]::-moz-range-thumb {
   gap: 4px;
 }
 
+.footer-brand {
+  color: var(--text);
+  letter-spacing: 0.02em;
+}
+
 .disclaimer {
   opacity: 0.85;
 }
