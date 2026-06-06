@@ -10,6 +10,7 @@ const DEFAULT_TTL_MS = 30 * 60 * 1000; // 30 minutes
 
 export const DEFAULT_SETTINGS = {
   theme: "system", // 'system' | 'light' | 'dark' | 'midnight' | 'frost' | 'slate'
+  atmosphere: "auto", // 'auto' | 'winter' | 'spring' | 'summer' | 'fall' | 'off'
   tempUnit: "fahrenheit",
   reducedMotion: "system", // 'system' | 'on' | 'off'
   schoolType: "high",
@@ -18,6 +19,16 @@ export const DEFAULT_SETTINGS = {
   snowDaysUsed: 0,
   snowDaysAllowed: 5,
 };
+
+// Which settings count as "school" vs "appearance/preferences", so the two reset
+// actions in the Settings dialog can target the right subset.
+export const SCHOOL_SETTING_KEYS = [
+  "schoolType",
+  "areaType",
+  "districtSensitivity",
+  "snowDaysUsed",
+  "snowDaysAllowed",
+];
 
 let memoryFallback = null; // used when localStorage is unavailable
 
@@ -53,6 +64,24 @@ export function saveSettings(partial) {
   return root.settings;
 }
 
+/** Reset only the school-context settings to their defaults; keep appearance prefs. */
+export function resetSchoolSettings() {
+  const root = readRoot();
+  const current = { ...DEFAULT_SETTINGS, ...(root.settings || {}) };
+  for (const key of SCHOOL_SETTING_KEYS) current[key] = DEFAULT_SETTINGS[key];
+  root.settings = current;
+  writeRoot(root);
+  return root.settings;
+}
+
+/** Reset every saved preference (appearance + school) back to defaults. */
+export function resetPreferences() {
+  const root = readRoot();
+  root.settings = { ...DEFAULT_SETTINGS };
+  writeRoot(root);
+  return root.settings;
+}
+
 // --- saved (favorite) locations ------------------------------------------
 
 export function getSavedLocations() {
@@ -78,6 +107,13 @@ export function removeLocation(id) {
   return root.savedLocations;
 }
 
+export function clearSavedLocations() {
+  const root = readRoot();
+  root.savedLocations = [];
+  writeRoot(root);
+  return root.savedLocations;
+}
+
 // --- recent searches (most-recent-first, capped, de-duplicated) ----------
 
 export function getRecentSearches() {
@@ -91,6 +127,13 @@ export function addRecentSearch(entry) {
   const deduped = list.filter((e) => `${e.lat.toFixed(2)},${e.lon.toFixed(2)}` !== key);
   deduped.unshift({ ...entry, ts: Date.now() });
   root.recentSearches = deduped.slice(0, RECENTS_CAP);
+  writeRoot(root);
+  return root.recentSearches;
+}
+
+export function clearRecentSearches() {
+  const root = readRoot();
+  root.recentSearches = [];
   writeRoot(root);
   return root.recentSearches;
 }

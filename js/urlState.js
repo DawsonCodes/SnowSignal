@@ -1,11 +1,24 @@
 // urlState.js
-// Read and write the *shareable* slice of state via URL query parameters, so a
-// link reproduces someone's exact scenario. Only shareable fields go here — never
-// the cache or recent searches.
+// Shareable scenario links. As of v1.0.0-beta.2 the address bar is NOT updated
+// during normal use — preferences persist via localStorage instead, keeping the URL
+// clean. A scenario URL is only built when the user explicitly clicks a share action.
 //
-// Precedence (handled by main.js): URL params > stored settings > defaults.
+// On load we still READ any query params so a shared link reproduces a scenario.
+// Precedence (applied by main.js): URL params > stored settings > defaults.
+
+import { round } from "./format.js";
 
 const NUM_KEYS = new Set(["lat", "lon", "sens", "used", "allowed"]);
+
+// Values equal to these are omitted from generated share URLs to keep them short.
+export const SHARE_DEFAULTS = {
+  school: "high",
+  area: "suburban",
+  sens: 0.5,
+  used: 0,
+  allowed: 5,
+  unit: "fahrenheit",
+};
 
 /** Parse the current location's query string into a plain object. */
 export function readUrlState(search = window.location.search) {
@@ -18,41 +31,45 @@ export function readUrlState(search = window.location.search) {
 }
 
 /**
- * Write shareable state into the address bar without adding history entries.
- * @param {object} state  e.g. { loc, lat, lon, school, area, sens, used, unit, theme }
+ * Build the query string for a scenario, omitting any value that equals its
+ * default. PURE (no DOM) so it is easy to unit-test.
+ * @param {object} state  { loc, lat, lon, school, area, sens, used, allowed, unit }
+ * @param {object} [defaults]
+ * @returns {string} query string without a leading "?"
  */
-export function writeUrlState(state) {
+export function buildShareParams(state = {}, defaults = SHARE_DEFAULTS) {
   const params = new URLSearchParams();
-  const add = (k, v) => {
+  const set = (k, v) => {
     if (v !== undefined && v !== null && v !== "") params.set(k, String(v));
   };
-  add("loc", state.loc);
-  add("lat", state.lat);
-  add("lon", state.lon);
-  add("school", state.school);
-  add("area", state.area);
-  add("sens", state.sens);
-  add("used", state.used);
-  add("allowed", state.allowed);
-  add("unit", state.unit);
-  add("theme", state.theme);
+  const setUnlessDefault = (k, v) => {
+    if (v === undefined || v === null || v === "") return;
+    if (String(v) === String(defaults[k])) return;
+    params.set(k, String(v));
+  };
 
-  const query = params.toString();
-  const url = query ? `${window.location.pathname}?${query}` : window.location.pathname;
-  try {
-    window.history.replaceState(null, "", url);
-  } catch {
-    /* replaceState can throw in sandboxed iframes — ignore. */
-  }
+  // Scenario identity — always included when present.
+  set("loc", state.loc);
+  if (Number.isFinite(state.lat)) set("lat", round(state.lat, 4));
+  if (Number.isFinite(state.lon)) set("lon", round(state.lon, 4));
+
+  // Context — only when it differs from the defaults.
+  setUnlessDefault("school", state.school);
+  setUnlessDefault("area", state.area);
+  if (Number.isFinite(state.sens)) setUnlessDefault("sens", state.sens);
+  if (Number.isFinite(state.used)) setUnlessDefault("used", state.used);
+  if (Number.isFinite(state.allowed)) setUnlessDefault("allowed", state.allowed);
+  setUnlessDefault("unit", state.unit);
+
+  return params.toString();
 }
 
-/** Build an absolute shareable URL string for the copy-summary button. */
+/**
+ * Build an absolute shareable URL for the copy-share-link button. Uses the live
+ * origin + pathname, so it stays correct under the `/snowsignal/` project subpath.
+ */
 export function buildShareUrl(state) {
-  const params = new URLSearchParams();
-  for (const [k, v] of Object.entries(state)) {
-    if (v !== undefined && v !== null && v !== "") params.set(k, String(v));
-  }
+  const query = buildShareParams(state);
   const base = `${window.location.origin}${window.location.pathname}`;
-  const query = params.toString();
   return query ? `${base}?${query}` : base;
 }
