@@ -36,6 +36,22 @@ body {
   background-attachment: fixed;
   line-height: 1.5;
   padding: 16px;
+  /* Smooth, restrained theme transitions (zeroed under reduced motion). */
+  transition: background-color 0.4s ease, color 0.4s ease;
+}
+
+/* Content sits above the fixed seasonal atmosphere layer. */
+.page {
+  position: relative;
+  z-index: 1;
+}
+
+/* Gentle cross-fade of surfaces when the theme changes. */
+.card,
+.settings-inner,
+.chip,
+.t-hour {
+  transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease;
 }
 
 h1 {

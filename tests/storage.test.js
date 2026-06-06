@@ -13,11 +13,15 @@ globalThis.localStorage = {
 const {
   getSettings,
   saveSettings,
+  resetSchoolSettings,
+  resetPreferences,
   addRecentSearch,
   getRecentSearches,
+  clearRecentSearches,
   saveLocation,
   getSavedLocations,
   removeLocation,
+  clearSavedLocations,
   getCachedForecast,
   setCachedForecast,
   DEFAULT_SETTINGS,
@@ -30,6 +34,39 @@ test("settings return defaults and merge partial saves", () => {
   saveSettings({ theme: "midnight" });
   assert.equal(getSettings().theme, "midnight");
   assert.equal(getSettings().tempUnit, DEFAULT_SETTINGS.tempUnit); // untouched
+});
+
+test("atmosphere preference defaults to auto and persists", () => {
+  assert.equal(getSettings().atmosphere, "auto");
+  saveSettings({ atmosphere: "winter" });
+  assert.equal(getSettings().atmosphere, "winter");
+});
+
+test("resetSchoolSettings restores school fields but keeps appearance prefs", () => {
+  saveSettings({ theme: "midnight", atmosphere: "summer", schoolType: "elementary", snowDaysUsed: 7 });
+  resetSchoolSettings();
+  const s = getSettings();
+  assert.equal(s.schoolType, DEFAULT_SETTINGS.schoolType); // reset
+  assert.equal(s.snowDaysUsed, DEFAULT_SETTINGS.snowDaysUsed); // reset
+  assert.equal(s.theme, "midnight"); // preserved
+  assert.equal(s.atmosphere, "summer"); // preserved
+});
+
+test("resetPreferences restores every setting to defaults", () => {
+  saveSettings({ theme: "midnight", atmosphere: "fall", schoolType: "college", tempUnit: "celsius" });
+  resetPreferences();
+  assert.deepEqual(getSettings(), DEFAULT_SETTINGS);
+});
+
+test("clearRecentSearches and clearSavedLocations empty their lists", () => {
+  addRecentSearch({ query: "x", name: "X", lat: 1, lon: 2 });
+  saveLocation({ label: "Y", lat: 3, lon: 4 });
+  assert.equal(getRecentSearches().length, 1);
+  assert.equal(getSavedLocations().length, 1);
+  clearRecentSearches();
+  clearSavedLocations();
+  assert.equal(getRecentSearches().length, 0);
+  assert.equal(getSavedLocations().length, 0);
 });
 
 test("recent searches are MRU, de-duplicated, and capped at 8", () => {

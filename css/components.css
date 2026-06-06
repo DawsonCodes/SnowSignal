@@ -17,6 +17,14 @@
 
 .brand-mark {
   font-size: 1.8rem;
+  display: inline-block;
+  animation: brand-drift 6s ease-in-out infinite;
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--accent-strong) 55%, transparent));
+}
+
+@keyframes brand-drift {
+  0%, 100% { transform: translateY(0) rotate(-4deg); }
+  50% { transform: translateY(-2px) rotate(4deg); }
 }
 
 .subtitle {
@@ -430,6 +438,91 @@ input[type="range"]::-moz-range-thumb {
   line-height: 1.45;
 }
 
+.forecast-window {
+  font-size: 0.78rem;
+  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  align-self: flex-start;
+}
+
+.result-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.input-note {
+  margin-top: 10px;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--text);
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--warn) 16%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--warn) 45%, transparent);
+}
+
+/* --- School-calendar reminders --- */
+.calendar-notices {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.calendar-notice {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  animation: notice-in 0.3s ease both;
+}
+
+.cn-icon {
+  font-size: 1.1rem;
+  line-height: 1.4;
+}
+
+.cn-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cn-body .cn-text {
+  font-size: 0.84rem;
+  color: var(--text);
+}
+
+.cn-tag {
+  margin-top: 4px;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.cn-dismiss {
+  width: 30px;
+  height: 30px;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+@keyframes notice-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: none; }
+}
+
 /* --- Factor breakdown bars --- */
 .factors {
   list-style: none;
@@ -639,36 +732,77 @@ input[type="range"]::-moz-range-thumb {
   justify-content: center;
   padding: 16px;
   z-index: 50;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.settings-panel.is-open {
+  opacity: 1;
 }
 
 .settings-inner {
   width: 100%;
-  max-width: 380px;
+  max-width: 440px;
+  max-height: calc(100vh - 32px);
+  display: flex;
+  flex-direction: column;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow);
   padding: 18px;
+  transform: translateY(12px) scale(0.98);
+  opacity: 0;
+  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.22s ease;
+}
+
+.settings-panel.is-open .settings-inner {
+  transform: none;
+  opacity: 1;
 }
 
 .settings-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
+}
+
+/* The body scrolls if it is taller than the viewport; the header stays put. */
+.settings-scroll {
+  overflow-y: auto;
+  margin: 0 -4px;
+  padding: 0 4px;
+}
+
+.settings-section {
+  padding-top: 14px;
+  margin-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.settings-section:first-child {
+  border-top: none;
+  margin-top: 4px;
+  padding-top: 4px;
+}
+
+.settings-section-title {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent-strong);
+  margin-bottom: 4px;
 }
 
 .settings-group {
   border: none;
-  border-top: 1px solid var(--border);
-  padding: 12px 0 0;
-  margin-top: 12px;
+  padding: 10px 0 0;
+  margin: 0;
 }
 
 .settings-group legend {
   font-size: 0.74rem;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
   color: var(--muted);
   padding: 0;
 }
@@ -686,10 +820,54 @@ input[type="range"]::-moz-range-thumb {
   gap: 8px;
   font-size: 0.9rem;
   cursor: pointer;
+  min-height: 28px;
 }
 
 .settings-options input[type="radio"] {
   accent-color: var(--accent);
+  width: 16px;
+  height: 16px;
+}
+
+.settings-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.settings-actions .ghost-btn {
+  justify-content: flex-start;
+}
+
+.ghost-btn.danger {
+  border-color: color-mix(in srgb, var(--bad) 55%, transparent);
+  color: var(--bad);
+}
+
+.ghost-btn.danger:hover {
+  background: color-mix(in srgb, var(--bad) 14%, var(--surface));
+}
+
+.settings-about {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 0.85rem;
+}
+
+.app-version {
+  font-weight: 600;
+}
+
+.settings-links {
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.settings-links a {
+  color: var(--accent-strong);
 }
 
 /* --- Toast --- */
@@ -730,7 +908,129 @@ input[type="range"]::-moz-range-thumb {
   100% { transform: translateY(110vh) rotateZ(540deg); opacity: 0; }
 }
 
+/* --- Seasonal atmosphere (decorative, behind content) --- */
+.atmosphere {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.atm-particle {
+  position: absolute;
+  top: -6vh;
+  font-size: calc(15px * var(--s, 1));
+  line-height: 1;
+  opacity: var(--o, 0.3);
+  will-change: transform;
+  animation: atm-fall var(--dur, 12s) linear var(--delay, 0s) infinite;
+}
+
+/* Snow / petals / leaves drift downward; the glyph + tint sets the mood. */
+.atmosphere[data-season="winter"] .atm-particle { color: #cfe0f5; }
+.atmosphere[data-season="spring"] .atm-particle { color: #f3c4d8; }
+.atmosphere[data-season="fall"] .atm-particle { font-size: calc(16px * var(--s, 1)); }
+
+/* Summer motes float upward with a soft warm glow. */
+.atmosphere[data-season="summer"] .atm-particle {
+  color: #ffd98a;
+  text-shadow: 0 0 6px rgba(255, 217, 138, 0.8);
+  animation-name: atm-rise;
+}
+
+@keyframes atm-fall {
+  0% { transform: translate3d(0, -6vh, 0) rotate(0deg); }
+  100% { transform: translate3d(var(--x, 0), 108vh, 0) rotate(360deg); }
+}
+
+@keyframes atm-rise {
+  0% { transform: translate3d(0, 112vh, 0); opacity: 0; }
+  12% { opacity: var(--o, 0.3); }
+  88% { opacity: var(--o, 0.3); }
+  100% { transform: translate3d(var(--x, 0), -8vh, 0); opacity: 0; }
+}
+
+/* --- Motion polish for results / dropdown / toast --- */
+.result.reveal {
+  animation: result-reveal 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes result-reveal {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+.t-hour.t-enter {
+  animation: t-enter 0.4s ease both;
+}
+
+@keyframes t-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+.suggestions {
+  animation: dropdown-in 0.16s ease both;
+}
+
+@keyframes dropdown-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: none; }
+}
+
+.toast.toast-in {
+  animation: toast-in 0.25s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translate(-50%, 12px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
 /* --- Responsive --- */
+
+/* Larger desktop layout: roomier spacing, bigger type, and a two-column factor
+   breakdown so the wider column is used without feeling cluttered. */
+@media (min-width: 760px) {
+  body {
+    padding: 28px 20px;
+  }
+  .card {
+    padding: 28px;
+    gap: 24px;
+  }
+  h1 {
+    font-size: 1.7rem;
+  }
+  .subtitle {
+    font-size: 0.9rem;
+  }
+  .result-head {
+    gap: 28px;
+    align-items: stretch;
+  }
+  .verdict {
+    justify-content: center;
+  }
+  .recommendation {
+    font-size: 1.08rem;
+  }
+  .dial {
+    width: 150px;
+    height: 150px;
+  }
+  .dial.small {
+    width: 118px;
+    height: 118px;
+  }
+  .factors {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 28px;
+  }
+}
+
 @media (max-width: 600px) {
   .card {
     padding: 16px;
@@ -747,6 +1047,10 @@ input[type="range"]::-moz-range-thumb {
   }
   .context-grid {
     grid-template-columns: 1fr;
+  }
+  .result-actions .ghost-btn {
+    flex: 1;
+    justify-content: center;
   }
 }
 

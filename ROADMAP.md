@@ -3,14 +3,21 @@
 _Know before the bell._ — A transparent snow-day and school-delay predictor.
 
 This roadmap is a direction, not a promise. Items may shift as we learn from
-real-world beta testing. The GitHub repository name stays `snow-day-calculator`
-during beta so the GitHub Pages URL remains stable.
+real-world beta testing. The app is served from the `/snowsignal/` GitHub Pages
+project subpath, and all asset paths are relative so that URL remains stable.
 
-## v1.0.0-beta.1 — current
+## v1.0.0-beta.1
 The rebuilt, modular app released for browser testing. Transparent deterministic
 prediction engine (closure %, delay %, confidence, factor breakdown), Open-Meteo
 data, optional NWS alerts, themes, saved/recent locations, shareable links, and a
 zero-dependency test suite.
+
+## v1.0.0-beta.2 — current
+A polish beta on the same engine: roomier desktop layout, seasonal atmosphere with an
+Auto mode, restrained UI motion, dismissible school-calendar reminders, cleaner URL
+behavior with explicit share links, friendlier reverse-geocoded geolocation labels, a
+reworked grouped Settings dialog with data resets, and stronger input validation. See
+[CHANGELOG.md](CHANGELOG.md).
 
 ## v1.0.0 — stable
 Promote to a stable release after bug fixes and real-world testing across a range

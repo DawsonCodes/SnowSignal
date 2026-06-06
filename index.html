@@ -14,6 +14,9 @@
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
 
+  <!-- Seasonal ambient layer (decorative; never captures clicks). -->
+  <div id="atmosphere" class="atmosphere" aria-hidden="true"></div>
+
   <div class="page">
     <header class="site-header">
       <div class="brand">
@@ -107,16 +110,20 @@
             <div class="field field-row">
               <div>
                 <label for="days-used">Snow days used</label>
-                <input id="days-used" type="number" min="0" max="30" value="0" />
+                <input id="days-used" type="number" min="0" max="60" step="1" value="0" inputmode="numeric" />
               </div>
               <div>
                 <label for="days-allowed">Days allowed</label>
-                <input id="days-allowed" type="number" min="0" max="30" value="5" />
+                <input id="days-allowed" type="number" min="0" max="60" step="1" value="5" inputmode="numeric" />
               </div>
             </div>
           </div>
+          <p class="input-note" id="days-note" role="status" hidden></p>
         </details>
       </section>
+
+      <!-- School-calendar reminders (heuristic, dismissible) -->
+      <div id="calendar-notices" class="calendar-notices" hidden></div>
 
       <!-- Winter alert banner -->
       <div id="alert-banner" class="alert-banner" role="status" hidden>
@@ -173,12 +180,18 @@
               <span class="chip" id="chip-confidence"></span>
             </div>
             <p class="recommendation" id="recommendation"></p>
-            <button type="button" id="copy-btn" class="ghost-btn">
-              <span aria-hidden="true">📋</span> Copy summary
-            </button>
-            <button type="button" id="save-btn" class="ghost-btn">
-              <span aria-hidden="true">⭐</span> <span id="save-btn-label">Save location</span>
-            </button>
+            <p class="forecast-window" id="forecast-window" hidden></p>
+            <div class="result-actions">
+              <button type="button" id="copy-btn" class="ghost-btn">
+                <span aria-hidden="true">📋</span> Copy summary
+              </button>
+              <button type="button" id="share-btn" class="ghost-btn">
+                <span aria-hidden="true">🔗</span> Copy share link
+              </button>
+              <button type="button" id="save-btn" class="ghost-btn">
+                <span aria-hidden="true">⭐</span> <span id="save-btn-label">Save location</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -221,32 +234,75 @@
         <button type="button" id="settings-close" class="icon-btn" aria-label="Close settings">✕</button>
       </div>
 
-      <fieldset class="settings-group">
-        <legend>Theme</legend>
-        <div class="settings-options" id="theme-options">
-          <label><input type="radio" name="theme" value="system" /> <span>System</span></label>
-          <label><input type="radio" name="theme" value="light" /> <span>Light</span></label>
-          <label><input type="radio" name="theme" value="dark" /> <span>Dark</span></label>
-          <label><input type="radio" name="theme" value="midnight" /> <span>Midnight snow</span></label>
-        </div>
-      </fieldset>
+      <div class="settings-scroll">
+        <section class="settings-section" aria-labelledby="sec-appearance">
+          <h3 class="settings-section-title" id="sec-appearance">Appearance</h3>
 
-      <fieldset class="settings-group">
-        <legend>Temperature unit</legend>
-        <div class="settings-options">
-          <label><input type="radio" name="temp-unit" value="fahrenheit" /> <span>Fahrenheit (°F)</span></label>
-          <label><input type="radio" name="temp-unit" value="celsius" /> <span>Celsius (°C)</span></label>
-        </div>
-      </fieldset>
+          <fieldset class="settings-group">
+            <legend>Theme</legend>
+            <div class="settings-options" id="theme-options">
+              <label><input type="radio" name="theme" value="system" /> <span>System</span></label>
+              <label><input type="radio" name="theme" value="light" /> <span>Light</span></label>
+              <label><input type="radio" name="theme" value="dark" /> <span>Dark</span></label>
+              <label><input type="radio" name="theme" value="midnight" /> <span>Midnight snow</span></label>
+            </div>
+          </fieldset>
 
-      <fieldset class="settings-group">
-        <legend>Motion</legend>
-        <div class="settings-options">
-          <label><input type="radio" name="reduced-motion" value="system" /> <span>Match system</span></label>
-          <label><input type="radio" name="reduced-motion" value="off" /> <span>Allow animations</span></label>
-          <label><input type="radio" name="reduced-motion" value="on" /> <span>Reduce animations</span></label>
-        </div>
-      </fieldset>
+          <fieldset class="settings-group">
+            <legend>Atmosphere</legend>
+            <div class="settings-options">
+              <label><input type="radio" name="atmosphere" value="auto" /> <span>Auto (by season)</span></label>
+              <label><input type="radio" name="atmosphere" value="winter" /> <span>Winter</span></label>
+              <label><input type="radio" name="atmosphere" value="spring" /> <span>Spring</span></label>
+              <label><input type="radio" name="atmosphere" value="summer" /> <span>Summer</span></label>
+              <label><input type="radio" name="atmosphere" value="fall" /> <span>Fall</span></label>
+              <label><input type="radio" name="atmosphere" value="off" /> <span>Off</span></label>
+            </div>
+          </fieldset>
+
+          <fieldset class="settings-group">
+            <legend>Motion</legend>
+            <div class="settings-options">
+              <label><input type="radio" name="reduced-motion" value="system" /> <span>Match system</span></label>
+              <label><input type="radio" name="reduced-motion" value="off" /> <span>Allow animations</span></label>
+              <label><input type="radio" name="reduced-motion" value="on" /> <span>Reduce animations</span></label>
+            </div>
+          </fieldset>
+        </section>
+
+        <section class="settings-section" aria-labelledby="sec-weather">
+          <h3 class="settings-section-title" id="sec-weather">Weather</h3>
+          <fieldset class="settings-group">
+            <legend>Temperature unit</legend>
+            <div class="settings-options">
+              <label><input type="radio" name="temp-unit" value="fahrenheit" /> <span>Fahrenheit (°F)</span></label>
+              <label><input type="radio" name="temp-unit" value="celsius" /> <span>Celsius (°C)</span></label>
+            </div>
+          </fieldset>
+        </section>
+
+        <section class="settings-section" aria-labelledby="sec-data">
+          <h3 class="settings-section-title" id="sec-data">Data</h3>
+          <div class="settings-actions">
+            <button type="button" class="ghost-btn" id="clear-recent">Clear recent locations</button>
+            <button type="button" class="ghost-btn" id="clear-saved">Clear saved locations</button>
+            <button type="button" class="ghost-btn" id="reset-school">Reset school settings</button>
+            <button type="button" class="ghost-btn danger" id="reset-prefs">Reset all preferences</button>
+          </div>
+        </section>
+
+        <section class="settings-section" aria-labelledby="sec-about">
+          <h3 class="settings-section-title" id="sec-about">About</h3>
+          <p class="settings-about">
+            <span class="app-version" id="app-version">SnowSignal</span>
+            <span class="settings-links">
+              <a id="changelog-link" href="https://github.com/DawsonCodes/snowsignal/blob/main/CHANGELOG.md" target="_blank" rel="noopener">View changelog</a>
+              ·
+              <a id="roadmap-link" href="https://github.com/DawsonCodes/snowsignal/blob/main/ROADMAP.md" target="_blank" rel="noopener">View roadmap</a>
+            </span>
+          </p>
+        </section>
+      </div>
     </div>
   </div>
 
