@@ -27,7 +27,7 @@
         </div>
       </div>
       <div class="header-actions">
-        <button type="button" id="theme-toggle" class="icon-btn" aria-label="Change theme">
+        <button type="button" id="theme-toggle" class="icon-btn" aria-label="Toggle light or dark mode">
           <span id="theme-toggle-icon" aria-hidden="true">🌙</span>
         </button>
         <button type="button" id="settings-toggle" class="icon-btn" aria-haspopup="dialog" aria-label="Open settings">
@@ -37,93 +37,92 @@
     </header>
 
     <main id="main" class="card">
-      <!-- Search -->
-      <section class="search" aria-label="Find a location">
-        <div class="search-row">
-          <div class="search-field">
-            <label for="location" class="visually-hidden">City, town, or ZIP code</label>
-            <input
-              id="location"
-              type="text"
-              inputmode="search"
-              autocomplete="off"
-              placeholder="Search a city, town, or ZIP code"
-              aria-describedby="search-hint"
-              role="combobox"
-              aria-expanded="false"
-              aria-controls="suggestions"
-              aria-autocomplete="list"
-            />
-            <ul id="suggestions" class="suggestions" role="listbox" hidden></ul>
+      <!-- Search + school controls: full-width across the top of the workspace -->
+      <div class="controls">
+        <section class="search" aria-label="Find a location">
+          <div class="search-row">
+            <div class="search-field">
+              <label for="location" class="visually-hidden">City, town, or ZIP code</label>
+              <input
+                id="location"
+                type="text"
+                inputmode="search"
+                autocomplete="off"
+                placeholder="Search a city, town, or ZIP code"
+                aria-describedby="search-hint"
+                role="combobox"
+                aria-expanded="false"
+                aria-controls="suggestions"
+                aria-autocomplete="list"
+              />
+              <ul id="suggestions" class="suggestions" role="listbox" hidden></ul>
+            </div>
+            <button type="button" id="geo-btn" class="ghost-btn" aria-label="Use my current location">
+              <span aria-hidden="true">📍</span><span class="geo-label">My location</span>
+            </button>
           </div>
-          <button type="button" id="geo-btn" class="ghost-btn" aria-label="Use my current location">
-            <span aria-hidden="true">📍</span><span class="geo-label">My location</span>
-          </button>
-        </div>
-        <p id="search-hint" class="hint">
-          We’ll fetch the forecast automatically. US locations also show official winter alerts.
-        </p>
+          <p id="search-hint" class="hint">
+            We’ll fetch the forecast automatically. US locations also show official winter alerts.
+          </p>
 
-        <div class="quick-row">
-          <div class="quick-group" id="saved-group" hidden>
-            <span class="quick-label">Saved</span>
-            <div class="chips" id="saved-locations"></div>
+          <div class="quick-row">
+            <div class="quick-group" id="saved-group" hidden>
+              <span class="quick-label">Saved</span>
+              <div class="chips" id="saved-locations"></div>
+            </div>
+            <div class="quick-group" id="recent-group" hidden>
+              <span class="quick-label">Recent</span>
+              <div class="chips" id="recent-searches"></div>
+            </div>
           </div>
-          <div class="quick-group" id="recent-group" hidden>
-            <span class="quick-label">Recent</span>
-            <div class="chips" id="recent-searches"></div>
-          </div>
-        </div>
-      </section>
+        </section>
 
-      <!-- School context (recomputes prediction live) -->
-      <section class="context" aria-label="School details">
-        <div class="context-grid">
-          <div class="field">
-            <label for="school-type">School type</label>
-            <select id="school-type">
-              <option value="elementary">Elementary</option>
-              <option value="middle">Middle school</option>
-              <option value="high" selected>High school</option>
-              <option value="college">College / university</option>
-            </select>
-          </div>
-          <div class="field">
-            <label for="area-type">Area</label>
-            <select id="area-type">
-              <option value="urban">Urban</option>
-              <option value="suburban" selected>Suburban</option>
-              <option value="rural">Rural</option>
-            </select>
-          </div>
-        </div>
-
-        <details class="advanced" id="advanced">
-          <summary>Advanced settings</summary>
+        <!-- School context (recomputes prediction live) -->
+        <section class="context" aria-label="School details">
           <div class="context-grid">
             <div class="field">
-              <label for="sensitivity">
-                District snow-day tendency: <output id="sensitivity-out">Average</output>
-              </label>
-              <input id="sensitivity" type="range" min="0" max="1" step="0.1" value="0.5" />
+              <label for="school-type">School type</label>
+              <select id="school-type">
+                <option value="elementary">Elementary</option>
+                <option value="middle">Middle school</option>
+                <option value="high" selected>High school</option>
+                <option value="college">College / university</option>
+              </select>
             </div>
-            <div class="field field-row">
-              <div>
-                <label for="days-used">Snow days used</label>
-                <input id="days-used" type="number" min="0" max="60" step="1" value="0" inputmode="numeric" />
-              </div>
-              <div>
-                <label for="days-allowed">Days allowed</label>
-                <input id="days-allowed" type="number" min="0" max="60" step="1" value="5" inputmode="numeric" />
-              </div>
+            <div class="field">
+              <label for="area-type">Area</label>
+              <select id="area-type">
+                <option value="urban">Urban</option>
+                <option value="suburban" selected>Suburban</option>
+                <option value="rural">Rural</option>
+              </select>
             </div>
           </div>
-          <p class="input-note" id="days-note" role="status" hidden></p>
-        </details>
-      </section>
 
-      <!-- School-calendar reminders (heuristic, dismissible) -->
-      <div id="calendar-notices" class="calendar-notices" hidden></div>
+          <details class="advanced" id="advanced">
+            <summary>Advanced settings</summary>
+            <div class="context-grid">
+              <div class="field">
+                <label for="sensitivity">
+                  District snow-day tendency: <output id="sensitivity-out">Average</output>
+                </label>
+                <input id="sensitivity" type="range" min="0" max="1" step="0.1" value="0.5" />
+              </div>
+              <div class="field field-row">
+                <div>
+                  <label for="days-used">Snow days used</label>
+                  <input id="days-used" type="number" min="0" max="60" step="1" value="0" inputmode="numeric" />
+                </div>
+                <div>
+                  <label for="days-allowed">Days allowed</label>
+                  <input id="days-allowed" type="number" min="0" max="60" step="1" value="5" inputmode="numeric" />
+                </div>
+              </div>
+            </div>
+            <p class="input-note" id="days-note" role="status" hidden></p>
+          </details>
+        </section>
+      </div>
 
       <!-- Winter alert banner -->
       <div id="alert-banner" class="alert-banner" role="status" hidden>
@@ -151,6 +150,13 @@
 
       <!-- Result -->
       <section id="result" class="result" hidden aria-live="polite">
+        <!-- Compact forecast header: local date, window, freshness -->
+        <div class="result-header" id="result-header">
+          <p class="rh-date" id="rh-date"></p>
+          <p class="forecast-window" id="forecast-window" hidden></p>
+          <p class="rh-updated" id="rh-updated" hidden></p>
+        </div>
+
         <div class="result-head">
           <div class="dials">
             <div class="dial" id="dial-closure">
@@ -180,7 +186,7 @@
               <span class="chip" id="chip-confidence"></span>
             </div>
             <p class="recommendation" id="recommendation"></p>
-            <p class="forecast-window" id="forecast-window" hidden></p>
+            <p class="gate-note" id="gate-note" hidden></p>
             <div class="result-actions">
               <button type="button" id="copy-btn" class="ghost-btn">
                 <span aria-hidden="true">📋</span> Copy summary
@@ -195,14 +201,20 @@
           </div>
         </div>
 
-        <div class="breakdown">
-          <h2 class="section-title">What’s driving this estimate</h2>
-          <ul id="factors" class="factors"></ul>
-        </div>
+        <div class="result-grid">
+          <div class="breakdown">
+            <h2 class="section-title">What’s driving this estimate</h2>
+            <ul id="factors" class="factors"></ul>
+          </div>
 
-        <div class="timeline-wrap">
-          <h2 class="section-title">Next hours</h2>
-          <div id="timeline" class="timeline" role="img" aria-label="Hourly snow and temperature forecast"></div>
+          <div class="result-secondary">
+            <details class="weather-details" id="weather-details">
+              <summary>Weather details</summary>
+              <dl class="wd-grid" id="wd-grid"></dl>
+              <h3 class="section-title wd-timeline-title">Hourly outlook</h3>
+              <div id="timeline" class="timeline" role="img" aria-label="Hourly snow and temperature forecast"></div>
+            </details>
+          </div>
         </div>
 
         <p class="cache-note" id="cache-note" hidden></p>
@@ -213,20 +225,35 @@
       </p>
     </main>
 
+    <!-- Schedule context: heuristic calendar reminders, separate from the calculator.
+         Hidden until a location/result exists. -->
+    <section class="card schedule-context" id="schedule-context" hidden aria-label="Schedule context">
+      <div class="sc-head">
+        <h2 class="section-title">Schedule context</h2>
+        <span class="sc-tag">Heuristic — not official school-calendar data</span>
+      </div>
+      <div id="calendar-notices" class="calendar-notices"></div>
+    </section>
+
     <footer class="site-footer">
       <p class="footer-brand"><strong>SnowSignal</strong> · Know before the bell.</p>
-      <p>
-        Weather by <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a> ·
-        US alerts by <a href="https://www.weather.gov" target="_blank" rel="noopener">NWS</a>
+      <p class="footer-links">
+        <span>© 2026</span> ·
+        <a id="footer-license" href="https://github.com/DawsonCodes/snowsignal/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a> ·
+        <a id="footer-source" href="https://github.com/DawsonCodes/snowsignal" target="_blank" rel="noopener">View source</a> ·
+        <span>Weather by <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a></span> ·
+        <span>US alerts by <a href="https://www.weather.gov" target="_blank" rel="noopener">NWS</a></span> ·
+        <span>Client-only · No tracking</span>
       </p>
+      <p class="footer-counter" id="footer-counter" hidden></p>
       <p class="disclaimer">
-        SnowSignal is an estimate for planning — not affiliated with any school district.
-        Always rely on official announcements.
+        SnowSignal is an estimate for planning and is not affiliated with any school district.
+        Always rely on official announcements for closures and delays.
       </p>
     </footer>
   </div>
 
-  <!-- Settings dialog -->
+  <!-- Settings dialog (tabbed) -->
   <div id="settings-panel" class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settings-title" hidden>
     <div class="settings-inner">
       <div class="settings-header">
@@ -234,72 +261,97 @@
         <button type="button" id="settings-close" class="icon-btn" aria-label="Close settings">✕</button>
       </div>
 
-      <div class="settings-scroll">
-        <section class="settings-section" aria-labelledby="sec-appearance">
-          <h3 class="settings-section-title" id="sec-appearance">Appearance</h3>
+      <div class="settings-tabs" role="tablist" aria-label="Settings sections">
+        <button type="button" class="settings-tab" role="tab" id="tab-appearance" aria-controls="panel-appearance" aria-selected="true">Appearance</button>
+        <button type="button" class="settings-tab" role="tab" id="tab-weather" aria-controls="panel-weather" aria-selected="false" tabindex="-1">Weather</button>
+        <button type="button" class="settings-tab" role="tab" id="tab-data" aria-controls="panel-data" aria-selected="false" tabindex="-1">Data</button>
+        <button type="button" class="settings-tab" role="tab" id="tab-about" aria-controls="panel-about" aria-selected="false" tabindex="-1">About</button>
+      </div>
 
+      <div class="settings-scroll">
+        <!-- Appearance -->
+        <section class="settings-panel-tab" id="panel-appearance" role="tabpanel" aria-labelledby="tab-appearance">
           <fieldset class="settings-group">
             <legend>Theme</legend>
-            <div class="settings-options" id="theme-options">
-              <label><input type="radio" name="theme" value="system" /> <span>System</span></label>
-              <label><input type="radio" name="theme" value="light" /> <span>Light</span></label>
-              <label><input type="radio" name="theme" value="dark" /> <span>Dark</span></label>
-              <label><input type="radio" name="theme" value="midnight" /> <span>Midnight snow</span></label>
+            <div class="settings-pills" id="theme-options" role="radiogroup" aria-label="Theme">
+              <label class="pill"><input type="radio" name="theme" value="system" /> <span>System</span></label>
+              <label class="pill"><input type="radio" name="theme" value="light" /> <span>Light</span></label>
+              <label class="pill"><input type="radio" name="theme" value="dark" /> <span>Dark</span></label>
             </div>
+            <p class="settings-badge" id="theme-system-badge" hidden></p>
+          </fieldset>
+
+          <fieldset class="settings-group">
+            <legend>Accent hue</legend>
+            <div class="accent-row">
+              <span class="accent-swatch" id="accent-swatch" aria-hidden="true"></span>
+              <label for="accent-hue" class="visually-hidden">Accent hue</label>
+              <input type="range" id="accent-hue" class="accent-slider" min="0" max="360" step="1" value="217"
+                     aria-describedby="accent-help" />
+              <button type="button" class="ghost-btn" id="accent-reset">Reset</button>
+            </div>
+            <p class="hint" id="accent-help">Tunes the accent and ambient glow. Contrast and status colors stay fixed.</p>
           </fieldset>
 
           <fieldset class="settings-group">
             <legend>Atmosphere</legend>
-            <div class="settings-options">
-              <label><input type="radio" name="atmosphere" value="auto" /> <span>Auto (by season)</span></label>
-              <label><input type="radio" name="atmosphere" value="winter" /> <span>Winter</span></label>
-              <label><input type="radio" name="atmosphere" value="spring" /> <span>Spring</span></label>
-              <label><input type="radio" name="atmosphere" value="summer" /> <span>Summer</span></label>
-              <label><input type="radio" name="atmosphere" value="fall" /> <span>Fall</span></label>
-              <label><input type="radio" name="atmosphere" value="off" /> <span>Off</span></label>
+            <div class="settings-pills" id="atmosphere-options" role="radiogroup" aria-label="Atmosphere">
+              <label class="pill"><input type="radio" name="atmosphere" value="auto" /> <span>Auto</span></label>
+              <label class="pill"><input type="radio" name="atmosphere" value="winter" /> <span>Winter</span></label>
+              <label class="pill"><input type="radio" name="atmosphere" value="spring" /> <span>Spring</span></label>
+              <label class="pill"><input type="radio" name="atmosphere" value="summer" /> <span>Summer</span></label>
+              <label class="pill"><input type="radio" name="atmosphere" value="fall" /> <span>Fall</span></label>
+              <label class="pill"><input type="radio" name="atmosphere" value="off" /> <span>Off</span></label>
             </div>
           </fieldset>
 
           <fieldset class="settings-group">
             <legend>Motion</legend>
-            <div class="settings-options">
-              <label><input type="radio" name="reduced-motion" value="system" /> <span>Match system</span></label>
-              <label><input type="radio" name="reduced-motion" value="off" /> <span>Allow animations</span></label>
-              <label><input type="radio" name="reduced-motion" value="on" /> <span>Reduce animations</span></label>
+            <div class="settings-pills" role="radiogroup" aria-label="Motion">
+              <label class="pill"><input type="radio" name="reduced-motion" value="system" /> <span>Match system</span></label>
+              <label class="pill"><input type="radio" name="reduced-motion" value="off" /> <span>Allow</span></label>
+              <label class="pill"><input type="radio" name="reduced-motion" value="on" /> <span>Reduce</span></label>
             </div>
           </fieldset>
         </section>
 
-        <section class="settings-section" aria-labelledby="sec-weather">
-          <h3 class="settings-section-title" id="sec-weather">Weather</h3>
+        <!-- Weather -->
+        <section class="settings-panel-tab" id="panel-weather" role="tabpanel" aria-labelledby="tab-weather" hidden>
           <fieldset class="settings-group">
             <legend>Temperature unit</legend>
-            <div class="settings-options">
-              <label><input type="radio" name="temp-unit" value="fahrenheit" /> <span>Fahrenheit (°F)</span></label>
-              <label><input type="radio" name="temp-unit" value="celsius" /> <span>Celsius (°C)</span></label>
+            <div class="settings-pills" role="radiogroup" aria-label="Temperature unit">
+              <label class="pill"><input type="radio" name="temp-unit" value="fahrenheit" /> <span>Fahrenheit (°F)</span></label>
+              <label class="pill"><input type="radio" name="temp-unit" value="celsius" /> <span>Celsius (°C)</span></label>
             </div>
           </fieldset>
         </section>
 
-        <section class="settings-section" aria-labelledby="sec-data">
-          <h3 class="settings-section-title" id="sec-data">Data</h3>
+        <!-- Data -->
+        <section class="settings-panel-tab" id="panel-data" role="tabpanel" aria-labelledby="tab-data" hidden>
           <div class="settings-actions">
             <button type="button" class="ghost-btn" id="clear-recent">Clear recent locations</button>
             <button type="button" class="ghost-btn" id="clear-saved">Clear saved locations</button>
             <button type="button" class="ghost-btn" id="reset-school">Reset school settings</button>
+            <button type="button" class="ghost-btn" id="reset-counter">Reset estimate counter</button>
             <button type="button" class="ghost-btn danger" id="reset-prefs">Reset all preferences</button>
           </div>
         </section>
 
-        <section class="settings-section" aria-labelledby="sec-about">
-          <h3 class="settings-section-title" id="sec-about">About</h3>
+        <!-- About -->
+        <section class="settings-panel-tab" id="panel-about" role="tabpanel" aria-labelledby="tab-about" hidden>
           <p class="settings-about">
             <span class="app-version" id="app-version">SnowSignal</span>
+            <span class="settings-links">
+              <a id="license-link" href="https://github.com/DawsonCodes/snowsignal/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>
+              ·
+              <a id="source-link" href="https://github.com/DawsonCodes/snowsignal" target="_blank" rel="noopener">View source</a>
+            </span>
             <span class="settings-links">
               <a id="changelog-link" href="https://github.com/DawsonCodes/snowsignal/blob/main/CHANGELOG.md" target="_blank" rel="noopener">View changelog</a>
               ·
               <a id="roadmap-link" href="https://github.com/DawsonCodes/snowsignal/blob/main/ROADMAP.md" target="_blank" rel="noopener">View roadmap</a>
             </span>
+            <span class="settings-counter" id="about-counter"></span>
           </p>
         </section>
       </div>
