@@ -59,3 +59,52 @@ test("assets use relative paths so the app works under the /snowsignal/ subpath"
   const mainCss = read("css/main.css");
   assert.match(mainCss, /@import\s+"\.\//, "css partials imported relatively");
 });
+
+test("retired themes leave no theme token blocks behind", () => {
+  const tokens = read("css/tokens.css");
+  for (const t of ["midnight", "frost", "slate"]) {
+    assert.equal(
+      new RegExp(`\\[data-theme="${t}"\\]`).test(tokens),
+      false,
+      `css/tokens.css should not define a "${t}" theme`
+    );
+  }
+  // The two surviving themes remain.
+  assert.match(tokens, /\[data-theme="dark"\]/, "dark theme retained");
+});
+
+test("accent is hue-driven via a CSS custom property", () => {
+  const tokens = read("css/tokens.css");
+  assert.match(tokens, /--accent-h:/, "an accent hue custom property is defined");
+  assert.match(tokens, /--accent:\s*hsl\(var\(--accent-h\)/, "accent derives from the hue");
+  // Semantic status colors stay fixed and distinct from the accent.
+  assert.match(tokens, /--good:/);
+  assert.match(tokens, /--warn:/);
+  assert.match(tokens, /--bad:/);
+});
+
+test("settings modal is the wider tabbed layout", () => {
+  const html = read("index.html");
+  assert.match(html, /role="tablist"/, "settings use a tablist");
+  assert.match(html, /id="panel-appearance"[^>]*role="tabpanel"/, "appearance tabpanel exists");
+  assert.match(html, /id="panel-about"[^>]*role="tabpanel"/, "about tabpanel exists");
+  const components = read("css/components.css");
+  const inner = /\.settings-inner\s*\{[^}]*\}/.exec(components);
+  assert.ok(inner, "expected a .settings-inner rule");
+  assert.match(inner[0], /max-width:\s*7\d\dpx/, "settings modal widened to ~700–820px");
+});
+
+test("schedule context is a separate panel hidden until a result exists", () => {
+  const html = read("index.html");
+  assert.match(html, /id="schedule-context"[^>]*hidden/, "schedule-context starts hidden");
+  assert.match(html, /class="card schedule-context"/, "schedule context is its own card");
+});
+
+test("light and dark atmospheres are tuned separately", () => {
+  const css = read("css/components.css");
+  assert.match(
+    css,
+    /:root\[data-theme="light"\]\s+\.atmosphere\[data-season="winter"\]/,
+    "light-theme winter particles are re-tinted for contrast"
+  );
+});

@@ -12,12 +12,20 @@ prediction engine (closure %, delay %, confidence, factor breakdown), Open-Meteo
 data, optional NWS alerts, themes, saved/recent locations, shareable links, and a
 zero-dependency test suite.
 
-## v1.0.0-beta.2 — current
+## v1.0.0-beta.2
 A polish beta on the same engine: roomier desktop layout, seasonal atmosphere with an
 Auto mode, restrained UI motion, dismissible school-calendar reminders, cleaner URL
 behavior with explicit share links, friendlier reverse-geocoded geolocation labels, a
 reworked grouped Settings dialog with data resets, and stronger input validation. See
 [CHANGELOG.md](CHANGELOG.md).
+
+## v1.0.0-beta.3 — current
+A further polish beta (not a stable release) on the same transparent engine: a winter-weather
+plausibility gate so benign weather resolves to 0%, a wider desktop workspace, a separate
+Schedule context panel, simplified System/Light/Dark themes with safe accent-hue customization,
+a wider tabbed Settings modal, no unnecessary animation replays, result date/freshness labels,
+a collapsible Weather details panel, a device-local estimate counter, friendlier loading/error
+states, and open-source (MIT) documentation. See [CHANGELOG.md](CHANGELOG.md).
 
 ## v1.0.0 — stable
 Promote to a stable release after bug fixes and real-world testing across a range

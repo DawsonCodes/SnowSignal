@@ -12,7 +12,7 @@ deploys to GitHub Pages as-is. The only third-party calls are Open-Meteo (weathe
 geocoding), the NWS alerts API (U.S. only), and BigDataCloud's free, keyless
 reverse-geocode endpoint for friendly "My location" labels.
 
-> **Status:** polish beta (`v1.0.0-beta.2`) — not a stable release. See
+> **Status:** polish beta (`v1.0.0-beta.3`) — not a stable release. See
 > [Versioning](#versioning), [CHANGELOG.md](CHANGELOG.md), and [ROADMAP.md](ROADMAP.md).
 > The GitHub Pages URL is served from the `/snowsignal/` project subpath and all asset
 > paths are relative so the app keeps working there.
@@ -25,17 +25,25 @@ reverse-geocode endpoint for friendly "My location" labels.
 - 🌡️ Accounts for overnight snow, **snow during the morning commute**, **freezing rain / ice**,
   temperature & wind chill, wind gusts, low visibility, existing snow depth, precip probability,
   official winter alerts, storm timing, district sensitivity, area type, school type, and snow days used
-- 🎨 **Light / dark / midnight-snow** themes (plus frost & slate), with `prefers-color-scheme` defaults
+- 🛑 A **winter-weather plausibility gate**: with no meaningful winter hazard in the forecast window,
+  the estimate resolves to **0%** with a clear explanation — sensitivity, warm-weather wind, or the
+  calendar month can't create a phantom snow day, and unusual out-of-season storms still count
+- 🎨 **System / Light / Dark** themes (with a "System detected" badge) plus safe **accent-hue**
+  customization via a constrained hue slider
 - 🍃 **Seasonal atmosphere** — restrained, motion-respecting ambient effects (snow / petals / motes /
-  leaves) with an **Auto** mode that reads the location's hemisphere + date
-- 📅 **School-calendar reminders** — clearly-labeled heuristics for likely summer break, winter break,
-  and weekends (dismissible, never authoritative)
-- 💾 **Saved locations**, **recent searches**, **cached forecasts** (offline-friendly), and **explicit
-  share links** that keep the everyday URL clean
-- 📋 One-click **copy summary** + **copy share link**, an **hourly timeline**, a **forecast-window** label,
-  expandable **advanced settings**, loading skeletons, and clear error states
-- ⚙️ A **grouped Settings** dialog (Appearance / Weather / Data / About) with one-tap data resets
-- ♿ Accessible: keyboard navigation, focus trapping, `aria-live` results, and **reduced-motion** support
+  leaves) with an **Auto** mode that reads the location's hemisphere + date, tuned for light & dark
+- 📅 A separate **Schedule context** panel — clearly-labeled weekend / summer-break / winter-break
+  heuristics, hidden until a result exists (dismissible, never authoritative)
+- 🗓️ A result **date & freshness header** (location-local date, forecast window, "Updated …" stamp) and
+  a collapsible **Weather details** panel (current temp, low/high, window snowfall, gusts, alert status,
+  hourly outlook)
+- 💾 **Saved locations**, **recent searches**, **cached forecasts** (offline-friendly), an honest
+  **device-local estimate counter**, and **explicit share links** that keep the everyday URL clean
+- 📋 One-click **copy summary** + **copy share link**, friendly loading/error states with a **Try again**
+  action, and expandable **advanced settings**
+- ⚙️ A wider **tabbed Settings** dialog (Appearance / Weather / Data / About) with one-tap data resets
+- ♿ Accessible: keyboard navigation, focus trapping, tab semantics, `aria-live` results, text
+  equivalents for the hourly chart, and **reduced-motion** support
 
 ## How the prediction works
 
@@ -45,7 +53,9 @@ percentage. **Ice risk** and **snow during the morning commute** are intentional
 factors. Every factor is shown in the UI with its contribution, so the number is explainable rather
 than a black box.
 
-- **Closure %** — weighted sum of all factors, scaled and capped at 99%.
+- **Closure %** — weighted sum of all factors, scaled and capped at 99%. A small, isolated
+  `hasMeaningfulWinterHazard()` gate forces both the closure and delay to **0%** when the forecast
+  window holds no real winter hazard, so the score stays honest in benign weather.
 - **Delay %** — a separate profile that favors morning-timed storms that clear; it's suppressed when a
   full closure is already likely (a district would just close instead).
 - **Confidence** — reflects how *clear-cut the inputs are* (alert agreement, precip certainty, whether
@@ -136,13 +146,15 @@ Notes:
 
 ## Versioning
 
-This is **`v1.0.0-beta.2`** — a **polish beta**, still not a stable release. `beta.1` was the
-first public beta of the rebuilt app; `beta.2` keeps the same prediction engine and focuses on
-a roomier desktop layout, seasonal atmosphere, restrained UI motion, school-calendar reminders,
-cleaner URL behavior, friendlier geolocation labels, a reworked Settings dialog, and stronger
-input validation. Please keep treating predictions as estimates while the engine is tuned against
-real outcomes. Full notes are in [CHANGELOG.md](CHANGELOG.md); the road to a stable `v1.0.0` and
-beyond is in [ROADMAP.md](ROADMAP.md).
+This is **`v1.0.0-beta.3`** — a **polish beta**, still not a stable release. `beta.1` was the
+first public beta of the rebuilt app; `beta.2` and `beta.3` keep the same transparent prediction
+engine. `beta.3` adds a winter-weather plausibility gate, a wider desktop workspace, a separate
+Schedule context panel, simplified System/Light/Dark themes with safe accent-hue customization, a
+wider tabbed Settings modal, fewer animation replays, result date/freshness labels, a collapsible
+Weather details panel, a device-local estimate counter, and friendlier loading/error states. Please
+keep treating predictions as estimates while the engine is tuned against real outcomes. Full notes
+are in [CHANGELOG.md](CHANGELOG.md); the road to a stable `v1.0.0` and beyond is in
+[ROADMAP.md](ROADMAP.md).
 
 ## Attribution
 
@@ -150,6 +162,19 @@ beyond is in [ROADMAP.md](ROADMAP.md).
 - U.S. winter alerts: [National Weather Service / api.weather.gov](https://www.weather.gov) (public domain).
 - Reverse-geocode labels: [BigDataCloud](https://www.bigdatacloud.com) free client-side endpoint (no key).
 
+## Open source
+
+SnowSignal is open source and available under the **MIT License** — see the root
+[`LICENSE`](LICENSE) file. You're free to use, modify, and redistribute it, including for
+commercial purposes, provided the license and copyright notice are preserved. A compact
+**MIT License** and **View source** link appear in the app's footer and the Settings → About
+tab, pointing back to <https://github.com/DawsonCodes/snowsignal>.
+
+Contributions are welcome — please read [CONTRIBUTING.md](CONTRIBUTING.md) first. In short:
+report bugs via GitHub Issues, work on a feature branch and open a pull request, keep the app a
+static GitHub Pages site (no backend/framework/build step), justify any new dependency, API,
+analytics, or tracking, and run the full test suite (`node --test`) before submitting.
+
 ## License
 
-MIT — see `package.json`.
+[MIT](LICENSE) © 2026 DawsonCodes.

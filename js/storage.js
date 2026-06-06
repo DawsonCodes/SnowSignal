@@ -9,7 +9,8 @@ const RECENTS_CAP = 8;
 const DEFAULT_TTL_MS = 30 * 60 * 1000; // 30 minutes
 
 export const DEFAULT_SETTINGS = {
-  theme: "system", // 'system' | 'light' | 'dark' | 'midnight' | 'frost' | 'slate'
+  theme: "system", // 'system' | 'light' | 'dark'
+  accentHue: null, // null = brand default; otherwise an integer hue 0..360
   atmosphere: "auto", // 'auto' | 'winter' | 'spring' | 'summer' | 'fall' | 'off'
   tempUnit: "fahrenheit",
   reducedMotion: "system", // 'system' | 'on' | 'off'
@@ -18,6 +19,15 @@ export const DEFAULT_SETTINGS = {
   districtSensitivity: 0.5,
   snowDaysUsed: 0,
   snowDaysAllowed: 5,
+};
+
+// Themes retired in v1.0.0-beta.3. Any persisted value here migrates to the
+// closest surviving theme so beta.2 preferences keep working.
+const LEGACY_THEME_MAP = {
+  midnight: "dark",
+  "midnight-snow": "dark",
+  frost: "dark",
+  slate: "dark",
 };
 
 // Which settings count as "school" vs "appearance/preferences", so the two reset
@@ -54,7 +64,14 @@ function writeRoot(data) {
 
 export function getSettings() {
   const root = readRoot();
-  return { ...DEFAULT_SETTINGS, ...(root.settings || {}) };
+  const merged = { ...DEFAULT_SETTINGS, ...(root.settings || {}) };
+  // Migrate any retired theme preference to a surviving theme, persisting once.
+  if (Object.prototype.hasOwnProperty.call(LEGACY_THEME_MAP, merged.theme)) {
+    merged.theme = LEGACY_THEME_MAP[merged.theme];
+    root.settings = merged;
+    writeRoot(root);
+  }
+  return merged;
 }
 
 export function saveSettings(partial) {
@@ -136,6 +153,28 @@ export function clearRecentSearches() {
   root.recentSearches = [];
   writeRoot(root);
   return root.recentSearches;
+}
+
+// --- local estimate counter (device-local; never sent anywhere) ----------
+
+export function getEstimateCount() {
+  const n = readRoot().estimateCount;
+  return Number.isFinite(n) ? n : 0;
+}
+
+export function incrementEstimateCount() {
+  const root = readRoot();
+  const current = Number.isFinite(root.estimateCount) ? root.estimateCount : 0;
+  root.estimateCount = current + 1;
+  writeRoot(root);
+  return root.estimateCount;
+}
+
+export function resetEstimateCount() {
+  const root = readRoot();
+  root.estimateCount = 0;
+  writeRoot(root);
+  return 0;
 }
 
 // --- forecast cache (keyed by rounded lat/lon, with TTL) -----------------

@@ -34,7 +34,7 @@ export async function fetchForecast(lat, lon, { signal } = {}) {
   const url =
     `${FORECAST_URL}?latitude=${lat}&longitude=${lon}` +
     `&hourly=${HOURLY_FIELDS}` +
-    `&daily=temperature_2m_min,snowfall_sum` +
+    `&daily=temperature_2m_min,temperature_2m_max,snowfall_sum` +
     `&forecast_days=2&temperature_unit=fahrenheit&windspeed_unit=mph` +
     `&precipitation_unit=inch&timezone=auto`;
 

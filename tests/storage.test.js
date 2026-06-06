@@ -24,6 +24,9 @@ const {
   clearSavedLocations,
   getCachedForecast,
   setCachedForecast,
+  getEstimateCount,
+  incrementEstimateCount,
+  resetEstimateCount,
   DEFAULT_SETTINGS,
 } = await import("../js/storage.js");
 
@@ -31,9 +34,39 @@ beforeEach(() => store.clear());
 
 test("settings return defaults and merge partial saves", () => {
   assert.deepEqual(getSettings(), DEFAULT_SETTINGS);
-  saveSettings({ theme: "midnight" });
-  assert.equal(getSettings().theme, "midnight");
+  saveSettings({ theme: "dark" });
+  assert.equal(getSettings().theme, "dark");
   assert.equal(getSettings().tempUnit, DEFAULT_SETTINGS.tempUnit); // untouched
+});
+
+test("retired themes migrate to dark and the migration persists", () => {
+  for (const legacy of ["midnight", "midnight-snow", "frost", "slate"]) {
+    store.clear();
+    // Simulate a beta.2 preference written straight to storage.
+    store.set("snowday:v1", JSON.stringify({ settings: { theme: legacy, atmosphere: "winter" } }));
+    assert.equal(getSettings().theme, "dark", `${legacy} should migrate to dark`);
+    assert.equal(getSettings().atmosphere, "winter", "other prefs are preserved");
+    // The migrated value is written back, so the legacy value no longer lingers.
+    assert.match(store.get("snowday:v1"), /"theme":"dark"/);
+    assert.doesNotMatch(store.get("snowday:v1"), new RegExp(legacy === "dark" ? "x^" : `"theme":"${legacy}"`));
+  }
+});
+
+test("accent hue persists and resets", () => {
+  assert.equal(getSettings().accentHue, null); // default = brand
+  saveSettings({ accentHue: 210 });
+  assert.equal(getSettings().accentHue, 210);
+  saveSettings({ accentHue: null }); // Reset accent
+  assert.equal(getSettings().accentHue, null);
+});
+
+test("local estimate counter increments and resets", () => {
+  assert.equal(getEstimateCount(), 0);
+  assert.equal(incrementEstimateCount(), 1);
+  incrementEstimateCount();
+  assert.equal(getEstimateCount(), 2);
+  assert.equal(resetEstimateCount(), 0);
+  assert.equal(getEstimateCount(), 0);
 });
 
 test("atmosphere preference defaults to auto and persists", () => {
@@ -43,17 +76,17 @@ test("atmosphere preference defaults to auto and persists", () => {
 });
 
 test("resetSchoolSettings restores school fields but keeps appearance prefs", () => {
-  saveSettings({ theme: "midnight", atmosphere: "summer", schoolType: "elementary", snowDaysUsed: 7 });
+  saveSettings({ theme: "dark", atmosphere: "summer", schoolType: "elementary", snowDaysUsed: 7 });
   resetSchoolSettings();
   const s = getSettings();
   assert.equal(s.schoolType, DEFAULT_SETTINGS.schoolType); // reset
   assert.equal(s.snowDaysUsed, DEFAULT_SETTINGS.snowDaysUsed); // reset
-  assert.equal(s.theme, "midnight"); // preserved
+  assert.equal(s.theme, "dark"); // preserved
   assert.equal(s.atmosphere, "summer"); // preserved
 });
 
 test("resetPreferences restores every setting to defaults", () => {
-  saveSettings({ theme: "midnight", atmosphere: "fall", schoolType: "college", tempUnit: "celsius" });
+  saveSettings({ theme: "dark", atmosphere: "fall", schoolType: "college", tempUnit: "celsius" });
   resetPreferences();
   assert.deepEqual(getSettings(), DEFAULT_SETTINGS);
 });

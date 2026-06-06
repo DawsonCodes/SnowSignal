@@ -12,6 +12,8 @@ import {
   formatInches,
   formatPlaceLabel,
   formatHourLabel,
+  formatLocalDate,
+  formatUpdatedAt,
 } from "../js/format.js";
 
 test("clamp keeps values in range and rejects NaN", () => {
@@ -58,4 +60,20 @@ test("formatHourLabel converts to 12-hour clock", () => {
   assert.equal(formatHourLabel("2026-01-10T00:00"), "12 AM");
   assert.equal(formatHourLabel("2026-01-10T13:00"), "1 PM");
   assert.equal(formatHourLabel("2026-01-10T07:00"), "7 AM");
+});
+
+test("formatLocalDate renders a friendly weekday + month + day in a given zone", () => {
+  // A fixed UTC instant; in America/Detroit (UTC-5 in January) it is still Jan 12.
+  const inst = new Date("2026-01-12T17:30:00Z");
+  assert.equal(formatLocalDate(inst, "America/Detroit"), "Monday, January 12");
+  // Invalid timezone falls back to the local zone without throwing.
+  assert.doesNotThrow(() => formatLocalDate(inst, "Not/AZone"));
+  assert.equal(formatLocalDate("nonsense"), "");
+});
+
+test("formatUpdatedAt renders a freshness stamp with the zone abbreviation", () => {
+  const inst = new Date("2026-01-12T20:27:00Z"); // 3:27 PM EST in America/Detroit
+  const s = formatUpdatedAt(inst, "America/Detroit");
+  assert.match(s, /^Updated 3:27\s?PM\s+EST$/);
+  assert.equal(formatUpdatedAt("nonsense"), "");
 });

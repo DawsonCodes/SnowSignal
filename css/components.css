@@ -94,7 +94,13 @@
 #location:focus {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+/* Search + school controls share the top of the workspace. */
+.controls {
+  display: grid;
+  gap: 20px;
 }
 
 .suggestions {
@@ -436,6 +442,7 @@ input[type="range"]::-moz-range-thumb {
 .recommendation {
   font-size: 1rem;
   line-height: 1.45;
+  max-width: 60ch;
 }
 
 .forecast-window {
@@ -457,6 +464,128 @@ input[type="range"]::-moz-range-thumb {
   gap: 8px;
 }
 
+/* --- Result header: local date + window + freshness --- */
+.result-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 12px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.rh-date {
+  font-weight: 700;
+  font-size: 0.98rem;
+}
+
+.rh-updated {
+  font-size: 0.74rem;
+  color: var(--muted);
+  margin-left: auto;
+}
+
+/* Plausibility-gate explanation (estimate resolved to 0%). */
+.gate-note {
+  font-size: 0.82rem;
+  color: var(--text);
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--good) 12%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--good) 40%, transparent);
+}
+
+/* Wider workspace: breakdown beside secondary details on large screens. */
+.result-grid {
+  display: grid;
+  gap: 20px;
+}
+
+.result-secondary {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+/* --- Collapsible weather details --- */
+.weather-details {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  padding: 10px 14px;
+}
+
+.weather-details > summary {
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--accent-strong);
+  list-style: none;
+}
+
+.weather-details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.weather-details > summary::before {
+  content: "▸ ";
+}
+
+.weather-details[open] > summary::before {
+  content: "▾ ";
+}
+
+.wd-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 16px;
+  margin: 12px 0 4px;
+}
+
+.wd-grid div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.82rem;
+  padding: 4px 0;
+  border-bottom: 1px dashed var(--border);
+}
+
+.wd-grid dt {
+  color: var(--muted);
+}
+
+.wd-grid dd {
+  font-weight: 600;
+  text-align: right;
+}
+
+.wd-timeline-title {
+  margin-top: 8px;
+}
+
+/* --- Schedule context card (heuristic calendar reminders) --- */
+.schedule-context .sc-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.schedule-context .section-title {
+  margin-bottom: 0;
+}
+
+.sc-tag {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
 .input-note {
   margin-top: 10px;
   font-size: 0.78rem;
@@ -468,53 +597,63 @@ input[type="range"]::-moz-range-thumb {
   border: 1px solid color-mix(in srgb, var(--warn) 45%, transparent);
 }
 
-/* --- School-calendar reminders --- */
+/* --- School-calendar reminders (compact, expandable) --- */
 .calendar-notices {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .calendar-notice {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-  padding: 12px 14px;
   border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--accent) 12%, var(--surface));
   border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
   animation: notice-in 0.3s ease both;
 }
 
-.cn-icon {
-  font-size: 1.1rem;
-  line-height: 1.4;
-}
-
-.cn-body {
-  flex: 1;
+.calendar-notice > summary {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+  list-style: none;
+  font-size: 0.86rem;
+  font-weight: 600;
 }
 
-.cn-body .cn-text {
+.calendar-notice > summary::-webkit-details-marker {
+  display: none;
+}
+
+.cn-icon {
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+.cn-title {
+  flex: 1;
+}
+
+.cn-caret {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.calendar-notice[open] .cn-caret {
+  transform: rotate(90deg);
+}
+
+.cn-text {
   font-size: 0.84rem;
   color: var(--text);
-}
-
-.cn-tag {
-  margin-top: 4px;
-  font-size: 0.68rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--muted);
+  padding: 0 12px 12px 36px;
 }
 
 .cn-dismiss {
-  width: 30px;
-  height: 30px;
-  font-size: 0.85rem;
+  width: 28px;
+  height: 28px;
+  font-size: 0.8rem;
   flex-shrink: 0;
 }
 
@@ -717,8 +856,21 @@ input[type="range"]::-moz-range-thumb {
   letter-spacing: 0.02em;
 }
 
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 8px;
+}
+
+.footer-counter {
+  opacity: 0.9;
+}
+
 .disclaimer {
   opacity: 0.85;
+  max-width: 60ch;
+  margin: 0 auto;
 }
 
 /* --- Settings dialog --- */
@@ -742,7 +894,7 @@ input[type="range"]::-moz-range-thumb {
 
 .settings-inner {
   width: 100%;
-  max-width: 440px;
+  max-width: 760px;
   max-height: calc(100vh - 32px);
   display: flex;
   flex-direction: column;
@@ -775,58 +927,137 @@ input[type="range"]::-moz-range-thumb {
   padding: 0 4px;
 }
 
-.settings-section {
-  padding-top: 14px;
-  margin-top: 14px;
-  border-top: 1px solid var(--border);
+/* Tabs */
+.settings-tabs {
+  display: flex;
+  gap: 4px;
+  margin: 8px 0 4px;
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
 }
 
-.settings-section:first-child {
-  border-top: none;
-  margin-top: 4px;
-  padding-top: 4px;
+.settings-tab {
+  appearance: none;
+  border: none;
+  background: none;
+  color: var(--muted);
+  padding: 10px 14px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
 }
 
-.settings-section-title {
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
+.settings-tab[aria-selected="true"] {
   color: var(--accent-strong);
-  margin-bottom: 4px;
+  border-bottom-color: var(--accent-strong);
+}
+
+.settings-tab:hover {
+  color: var(--text);
+}
+
+.settings-panel-tab {
+  padding-top: 6px;
 }
 
 .settings-group {
   border: none;
-  padding: 10px 0 0;
+  padding: 14px 0 0;
   margin: 0;
 }
 
 .settings-group legend {
   font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
   color: var(--muted);
   padding: 0;
+  margin-bottom: 8px;
 }
 
-.settings-options {
+/* Selectable pills (compact, no long radio wall). */
+.settings-pills {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
   gap: 8px;
-  margin-top: 8px;
 }
 
-.settings-options label {
+.pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  min-height: 40px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.pill:hover {
+  background: var(--surface-3);
+}
+
+.pill input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+
+.pill:has(input:checked) {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 16%, var(--surface));
+  color: var(--accent-strong);
+}
+
+.pill:has(input:focus-visible) {
+  outline: 3px solid var(--accent-ring);
+  outline-offset: 2px;
+}
+
+.settings-badge {
+  margin-top: 10px;
+  font-size: 0.78rem;
+  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+
+/* Accent hue control */
+.accent-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.9rem;
-  cursor: pointer;
-  min-height: 28px;
+  gap: 12px;
 }
 
-.settings-options input[type="radio"] {
-  accent-color: var(--accent);
-  width: 16px;
-  height: 16px;
+.accent-swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--accent);
+  border: 2px solid var(--surface);
+  box-shadow: 0 0 0 1px var(--border);
+}
+
+.accent-slider {
+  flex: 1;
+  background: linear-gradient(
+    90deg,
+    hsl(0 80% 55%), hsl(60 80% 55%), hsl(120 80% 55%),
+    hsl(180 80% 55%), hsl(240 80% 55%), hsl(300 80% 55%), hsl(360 80% 55%)
+  );
 }
 
 .settings-actions {
@@ -927,7 +1158,9 @@ input[type="range"]::-moz-range-thumb {
   animation: atm-fall var(--dur, 12s) linear var(--delay, 0s) infinite;
 }
 
-/* Snow / petals / leaves drift downward; the glyph + tint sets the mood. */
+/* Snow / petals / leaves drift downward; the glyph + tint sets the mood.
+   Defaults below are tuned for dark backgrounds; the light-theme block re-tints
+   for contrast. Per-theme opacity is nudged so effects stay tasteful on both. */
 .atmosphere[data-season="winter"] .atm-particle { color: #cfe0f5; }
 .atmosphere[data-season="spring"] .atm-particle { color: #f3c4d8; }
 .atmosphere[data-season="fall"] .atm-particle { font-size: calc(16px * var(--s, 1)); }
@@ -938,6 +1171,12 @@ input[type="range"]::-moz-range-thumb {
   text-shadow: 0 0 6px rgba(255, 217, 138, 0.8);
   animation-name: atm-rise;
 }
+
+/* Light theme: darker tints + slightly lower opacity so particles read without
+   shouting against a bright surface. */
+:root[data-theme="light"] .atmosphere[data-season="winter"] .atm-particle { color: #6f9fd8; opacity: calc(var(--o, 0.3) * 0.8); }
+:root[data-theme="light"] .atmosphere[data-season="spring"] .atm-particle { color: #d27aa6; opacity: calc(var(--o, 0.3) * 0.8); }
+:root[data-theme="light"] .atmosphere[data-season="summer"] .atm-particle { color: #e08a1e; text-shadow: none; }
 
 @keyframes atm-fall {
   0% { transform: translate3d(0, -6vh, 0) rotate(0deg); }
@@ -990,8 +1229,8 @@ input[type="range"]::-moz-range-thumb {
 
 /* --- Responsive --- */
 
-/* Larger desktop layout: roomier spacing, bigger type, and a two-column factor
-   breakdown so the wider column is used without feeling cluttered. */
+/* Larger desktop layout: roomier spacing, bigger type, and a two-column
+   workspace so the wider column is used without crowding any single block. */
 @media (min-width: 760px) {
   body {
     padding: 28px 20px;
@@ -1005,6 +1244,11 @@ input[type="range"]::-moz-range-thumb {
   }
   .subtitle {
     font-size: 0.9rem;
+  }
+  /* Search beside the school controls across the top. */
+  .controls {
+    grid-template-columns: 1.4fr 1fr;
+    align-items: start;
   }
   .result-head {
     gap: 28px;
@@ -1024,10 +1268,13 @@ input[type="range"]::-moz-range-thumb {
     width: 118px;
     height: 118px;
   }
-  .factors {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px 28px;
+}
+
+/* Wide workspace: factor breakdown beside the secondary weather details. */
+@media (min-width: 900px) {
+  .result-grid {
+    grid-template-columns: 1.25fr 1fr;
+    align-items: start;
   }
 }
 
@@ -1051,6 +1298,13 @@ input[type="range"]::-moz-range-thumb {
   .result-actions .ghost-btn {
     flex: 1;
     justify-content: center;
+  }
+  .wd-grid {
+    grid-template-columns: 1fr;
+  }
+  /* Collapse weather details by default on small screens (JS removes [open]). */
+  .rh-updated {
+    margin-left: 0;
   }
 }
 

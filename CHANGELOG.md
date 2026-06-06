@@ -3,6 +3,64 @@
 All notable changes to SnowSignal are documented here. This project is in **public
 beta**; versions follow [semantic versioning](https://semver.org) with pre-release tags.
 
+## [1.0.0-beta.3] — 2026-06-06
+
+Another focused **polish beta** — not a stable release. The transparent deterministic
+engine is preserved (with one narrow safety improvement noted below); no backend, no
+framework, no new build step, no analytics or tracking. The GitHub Pages URL stays on
+the `/snowsignal/` subpath, and beta.2 preferences, saved/recent locations, and share
+links keep working.
+
+### Added
+- **Winter-weather plausibility gate** — a small, isolated `hasMeaningfulWinterHazard()`
+  helper. When there is no meaningful winter hazard in the forecast window (snow, ice,
+  near-freezing precipitation, an official winter alert, lingering cold snowpack, or
+  dangerous wind chill), closure and delay estimates resolve to **0%** with a clear
+  explanation. District sensitivity, warm-weather wind, and the calendar month can no
+  longer manufacture a phantom snow-day chance — and a genuinely unusual out-of-season
+  snow/ice event is **not** blocked by the month.
+- **Accent-hue customization** (Appearance → Accent hue): a constrained hue slider with
+  locked saturation/lightness, applied to the accent, borders, and ambient glow via CSS
+  custom properties. Includes **Reset accent**. Warning/error/status colors stay distinct.
+- **Schedule context panel** — heuristic weekend / summer-break / winter-break reminders
+  now live in their own compact, expandable card, hidden until a location/result exists.
+- **Date & freshness header** on results — the location-local date ("Forecast for Monday,
+  January 12"), the forecast window, and an "Updated …" stamp in the location's timezone.
+- **Collapsible Weather details** — current temp, overnight low, daytime high, window
+  snowfall, wind gusts, snow on the ground, and winter-alert status, plus the hourly
+  outlook with an accessible text equivalent. Collapsed by default on small screens.
+- **Honest local estimate counter** — "N estimates run on this device", stored only in
+  `localStorage`, shown subtly in the footer and About tab, with a reset in Data.
+- **Tabbed Settings modal** (Appearance / Weather / Data / About), wider (~760px), with
+  accessible tab semantics, arrow-key navigation, and selectable pills instead of long
+  radio walls. Focus trapping, Escape, click-outside, and X-close are preserved.
+
+### Changed
+- **Wider desktop workspace** (~1080px): full-width search + school controls across the
+  top and a two-column result workspace (factor breakdown beside weather details) on large
+  screens. Readable line lengths, a clean single-column mobile layout, accessible touch
+  targets, and no horizontal overflow; content is not stretched edge-to-edge on ultrawide.
+- **Themes simplified** to **System / Light / Dark**. The header sun/moon toggle now
+  switches Light↔Dark only, and a read-only "System detected: Dark/Light" badge appears
+  while Theme is set to System.
+- **Atmosphere** effects are tuned separately for light and dark backgrounds and remain
+  independent of theme (Auto / Winter / Spring / Summer / Fall / Off). Snowfall is still
+  available via Atmosphere: Winter.
+- **No more animation replays** — changing Theme, Atmosphere, Accent hue, Motion, or
+  Temperature unit (or scoring inputs) updates values in place; the full result entrance
+  animation only runs after a new successful forecast.
+- **Loading & error states** — friendlier messages (no raw technical errors), a clear
+  **Try again** action that re-runs your last action, and the coordinate fallback when
+  reverse geocoding fails.
+
+### Removed
+- The **Midnight snow** theme (plus the unused `frost`/`slate` theme tokens). Any stored
+  `midnight`/`midnight-snow`/`frost`/`slate` preference migrates safely to **Dark**.
+
+### Open source
+- Documented the **MIT License** (root `LICENSE`, `package.json`, README), added a
+  `CONTRIBUTING.md`, and added compact footer links to the license and source.
+
 ## [1.0.0-beta.2] — 2026-06-06
 
 A focused **polish beta**. No changes to the prediction engine, no backend, no new
