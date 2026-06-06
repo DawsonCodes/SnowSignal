@@ -2,13 +2,40 @@
 // includes scenario-defining fields. buildShareParams is pure (no DOM).
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildShareParams, SHARE_DEFAULTS } from "../js/urlState.js";
+import { buildShareParams, readUrlState, SHARE_DEFAULTS } from "../js/urlState.js";
 
 const parse = (qs) => new URLSearchParams(qs);
 
 test("an all-defaults scenario with no location produces an empty query", () => {
   const qs = buildShareParams({ ...SHARE_DEFAULTS });
   assert.equal(qs, "");
+});
+
+test("restores a beta.2 / beta.3 share link's parameters (unchanged schema)", () => {
+  // beta.2 and beta.3 produced the same param schema; readUrlState must still parse it.
+  const s = readUrlState(
+    "?loc=Detroit&lat=42.3314&lon=-83.0458&school=elementary&area=rural&sens=0.8&used=3&allowed=4&unit=celsius"
+  );
+  assert.equal(s.loc, "Detroit");
+  assert.equal(s.lat, 42.3314);
+  assert.equal(s.lon, -83.0458);
+  assert.equal(s.school, "elementary");
+  assert.equal(s.area, "rural");
+  assert.equal(s.sens, 0.8);
+  assert.equal(s.used, 3);
+  assert.equal(s.allowed, 4);
+  assert.equal(s.unit, "celsius");
+});
+
+test("a minimal location-only share link round-trips through build + read", () => {
+  const qs = buildShareParams({ loc: "Owosso", lat: 42.9978, lon: -84.1766 });
+  const s = readUrlState(`?${qs}`);
+  assert.equal(s.loc, "Owosso");
+  assert.equal(s.lat, 42.9978);
+  assert.equal(s.lon, -84.1766);
+  // Defaults are omitted from the link.
+  assert.equal(s.school, undefined);
+  assert.equal(s.unit, undefined);
 });
 
 test("default-valued context fields are omitted from the share URL", () => {

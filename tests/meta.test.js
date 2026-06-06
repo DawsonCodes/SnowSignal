@@ -8,7 +8,7 @@ import { dirname, join } from "node:path";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const read = (p) => readFileSync(join(root, p), "utf8");
 
-const VERSION = "1.0.0-beta.3";
+const VERSION = "1.0.0-beta.4";
 
 test("a root MIT LICENSE file exists and GitHub can recognize it", () => {
   const license = read("LICENSE");
